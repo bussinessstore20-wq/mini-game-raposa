@@ -97,15 +97,51 @@ async function answerDuel(id){
 async function showOffer(id){
  try{const d=await post('/api/offer/view',{user_id:playerId,name:playerName,produto_id:id});updatePlayer(d.player);if(d.url&&d.url!=='#')window.open(d.url,'_blank');else alert('A oferta será conectada ao produto real na próxima integração.')}catch(e){}
 }
-async function shop(){try{const items=await get('/api/shop');$('shopItems').innerHTML=items.map(i=>'<div class="rank"><div class="rankname"><b>'+i.nome+'</b><br><span style="color:#8f95a3;font-size:10px">'+i.descricao+'</span></div><div class="rankpoints">🪙 '+i.preco_moedas+'</div></div>').join('')}catch(e){$('shopItems').innerHTML='<div class="hint">Loja indisponível.</div>'}}
+async function shop(){
+ try{
+  const [items,p]=await Promise.all([
+   get('/api/shop'),
+   get('/api/player?user_id='+encodeURIComponent(playerId)+'&name='+encodeURIComponent(playerName))
+  ]);
+  updatePlayer(p);
+  $('shopCoins').textContent=p.moedas||0;
+  $('shopItems').innerHTML=items.map(i=>'<div class="shop-item"><b>'+i.nome+'</b><p>'+i.descricao+'</p><button class="buy" onclick="buyItem(\\''+i.id+'\\')">🪙 '+i.preco_moedas+' — COMPRAR</button></div>').join('');
+  renderInventory(p.inventario||{});
+ }catch(e){
+  $('shopItems').innerHTML='<div class="hint">Loja indisponível: '+escapeHtml(e.message)+'</div>';
+ }
+}
+function renderInventory(inv){
+ const names={double_points:'🔥 2x Pontos',second_chance:'❤️ Segunda Chance',hint:'🎯 Dica'};
+ const entries=Object.entries(inv||{});
+ $('shopInventory').innerHTML=entries.length?entries.map(([id,q])=>'<div>'+escapeHtml(names[id]||id)+': <b>'+q+'</b></div>').join(''):'<div class="hint">Seu inventário está vazio.</div>';
+}
+async function buyItem(id){
+ try{
+  const d=await post('/api/shop/buy',{user_id:playerId,name:playerName,item_id:id});
+  updatePlayer(d.player);
+  $('shopCoins').textContent=d.player.moedas||0;
+  renderInventory(d.player.inventario||{});
+  alert(d.mensagem);
+  await shop();
+ }catch(e){alert(e.message)}
+}
 async function ranking(){
  $('ranking').innerHTML='<div class="hint">Carregando...</div>';
  try{const list=await get('/api/ranking');$('ranking').innerHTML=list.length?list.map(r=>'<div class="rank"><div class="rankpos">#'+r.posicao+'</div><div class="rankname">'+escapeHtml(r.nome)+'</div><div class="rankpoints">⭐ '+r.pontos+'</div></div>').join(''):'<div class="hint">Você será o primeiro do ranking. Jogue agora!</div>'}catch(e){$('ranking').innerHTML='<div class="hint">Não foi possível carregar o ranking.</div>'}
 }
 function setMode(mode){
  currentMode=mode;
- $('gameHome').style.display=mode==='hunt'||mode==='price'||mode==='duel'?'block':'none';
+ document.querySelectorAll('.panel').forEach(x=>x.classList.remove('active'));
+ $('gameHome').style.display=(mode==='hunt'||mode==='price'||mode==='duel')?'block':'none';
  document.querySelectorAll('.mode').forEach(b=>b.classList.toggle('active',b.dataset.mode===mode));
+ if(mode==='hunt'){ $('gamePanel').classList.add('active'); hunt() }
+ if(mode==='price'){ $('gamePanel').classList.add('active'); price() }
+ if(mode==='duel'){ $('gamePanel').classList.add('active'); duel() }
+ if(mode==='ranking'){ $('rankingPanel').classList.add('active'); ranking() }
+ if(mode==='shop'){ $('shopPanel').classList.add('active'); shop() }
+}
+document.querySelectorAll('.mode').forEach(b=>b.classList.toggle('active',b.dataset.mode===mode));
  if(mode==='hunt'){ $('rankingPanel').classList.remove('active');$('gamePanel').classList.add('active');hunt() }
  if(mode==='price'){ $('rankingPanel').classList.remove('active');$('gamePanel').classList.add('active');price() }
  if(mode==='duel'){ $('rankingPanel').classList.remove('active');$('gamePanel').classList.add('active');duel() }
