@@ -236,7 +236,9 @@ const $=id=>document.getElementById(id);
 const money=v=>'R$ '+Number(v).toFixed(2).replace('.',',');
 const escapeHtml=s=>String(s??'').replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'}[m]));
 
-function demoOffer(name){alert('Demonstração visual: “'+name+'”. Este card e preço são fictícios. Na próxima etapa podemos conectar a oferta real da Shopee ou do Mercado Livre.')}\n\nasync function get(url){const r=await fetch(api+url);if(!r.ok)throw Error('Falha ao carregar');return r.json()}
+function demoOffer(name){alert('Demonstração visual: “'+name+'”. Este card e preço são fictícios. Na próxima etapa podemos conectar a oferta real da Shopee ou do Mercado Livre.')}
+
+async function get(url){const r=await fetch(api+url);if(!r.ok)throw Error('Falha ao carregar');return r.json()}
 async function post(url,data){const r=await fetch(api+url,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(data)});const j=await r.json();if(!r.ok)throw Error(j.erro||'Erro');return j}
 
 function updatePlayer(p){if(!p)return;$('points').textContent=p.pontos||0;$('coins').textContent=p.moedas||0;$('streak').textContent=(p.sequencia||0)+' acertos';$('best').textContent=p.melhor_sequencia||0;updateProfile(p);if(p.bonus_diario?.recebeu)alert('🎁 Bônus diário! +'+p.bonus_diario.moedas+' moedas e +'+p.bonus_diario.pontos+' pontos.');}
