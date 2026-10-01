@@ -35,6 +35,14 @@ PRODUTOS = [
     {"id":"ml-004","plataforma":"mercadolivre","nome":"Caixa de som Bluetooth","preco":89.90,"preco_anterior":149.90,"imagem":"🔊","categoria":"Eletrônicos","url":"#"},
 ]
 
+
+SHOP_ITEMS = {
+    "double_points": {"id":"double_points","nome":"🔥 2x Pontos","descricao":"Dobre os pontos da próxima partida.","preco_moedas":150,"tipo":"boost"},
+    "second_chance": {"id":"second_chance","nome":"❤️ Segunda Chance","descricao":"Item para continuar após um erro.","preco_moedas":50,"tipo":"utility"},
+    "hint": {"id":"hint","nome":"🎯 Dica","descricao":"Revela uma pista em um desafio.","preco_moedas":30,"tipo":"utility"},
+    "mystery_box": {"id":"mystery_box","nome":"📦 Baú Surpresa","descricao":"Receba um prêmio aleatório em moedas.","preco_moedas":100,"tipo":"random"},
+}
+
 jogadores = {}
 jogadores_lock = Lock()
 
@@ -47,7 +55,7 @@ def novo_jogador(user_id, nome="Caçador"):
         "sequencia":0,"partidas":0,"acertos":0,"erros":0,"ofertas_vistas":0,
         "melhor_sequencia":0,"ultima_partida":None,"ultimo_login":None,
         "bonus_diario_data":None,"bonus_diario_recebido":False,
-        "ofertas_recompensadas":0,"_rodadas":{}
+        "ofertas_recompensadas":0,"inventario":{},"_rodadas":{}
     }
 
 def obter_jogador(user_id="demo", nome="Caçador"):
@@ -217,12 +225,34 @@ def offer_view():
 
 @app.get("/api/shop")
 def shop():
-    return jsonify([
-        {"id":"double_points","nome":"🔥 2x Pontos","descricao":"Dobre os pontos da próxima partida.","preco_moedas":150,"tipo":"boost"},
-        {"id":"second_chance","nome":"❤️ Segunda Chance","descricao":"Item para continuar após um erro.","preco_moedas":50,"tipo":"utility"},
-        {"id":"hint","nome":"🎯 Dica","descricao":"Revela uma pista em um desafio.","preco_moedas":30,"tipo":"utility"},
-        {"id":"mystery_box","nome":"📦 Baú Surpresa","descricao":"Receba um prêmio aleatório em moedas.","preco_moedas":100,"tipo":"random"},
-    ])
+    return jsonify(list(SHOP_ITEMS.values()))
+
+@app.get("/api/inventory")
+def inventory():
+    jogador = obter_jogador(request.args.get("user_id","demo"), request.args.get("name","Caçador"))
+    return jsonify({"moedas": jogador["moedas"], "inventario": jogador.get("inventario", {})})
+
+@app.post("/api/shop/buy")
+def shop_buy():
+    dados = request.get_json(silent=True) or {}
+    jogador = obter_jogador(dados.get("user_id","demo"), dados.get("name","Caçador"))
+    item = SHOP_ITEMS.get(dados.get("item_id"))
+    if not item: return jsonify({"ok":False,"erro":"Item não encontrado."}),404
+    with jogadores_lock:
+        if jogador["moedas"] < item["preco_moedas"]:
+            return jsonify({"ok":False,"erro":"Você não tem moedas suficientes."}),400
+        jogador["moedas"] -= item["preco_moedas"]
+        if item["tipo"] == "random":
+            premio = random.randint(50, 200)
+            jogador["moedas"] += premio
+            mensagem = f"🎉 O baú premiou você com {premio} moedas!"
+            recebido = {"tipo":"moedas","quantidade":premio}
+        else:
+            inv = jogador.setdefault("inventario", {})
+            inv[item["id"]] = inv.get(item["id"], 0) + 1
+            mensagem = f"{item['nome']} adicionado ao seu inventário."
+            recebido = {"tipo":"item","item_id":item["id"],"quantidade":inv[item["id"]]}
+    return jsonify({"ok":True,"mensagem":mensagem,"recebido":recebido,"player":jogador_publico(jogador)})
 
 @app.get("/api/ranking")
 def ranking():
