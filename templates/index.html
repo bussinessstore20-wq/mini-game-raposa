@@ -133,6 +133,51 @@ body{background:#030a16!important;background-image:radial-gradient(ellipse at 70
 @media(max-width:899px){.hero-copy{width:100%}.hero-kicker{max-width:78%;font-size:8px;line-height:1.5}.hero-actions{max-width:75%;gap:6px}.hero-actions span{font-size:8px;padding:8px}.section-heading{margin-top:20px}.section-heading h2{font-size:19px}.section-heading>span{font-size:8px}.discovery-grid{grid-template-columns:1fr;gap:9px;margin-top:13px}.discovery-card{min-height:160px;padding:16px}.discovery-card h3{font-size:16px}}
 @media(max-width:420px){.hero-copy{width:100%}.hero-kicker{max-width:76%;font-size:7px;letter-spacing:.7px}.hero h1{max-width:80%!important}.hero p{max-width:73%!important}.hero-actions{max-width:72%}.hero-actions span{font-size:7px}.section-heading>span{max-width:100px;text-align:right;line-height:1.4}}
 
+
+/* Vitrine e missões da referência — dados demonstrativos */
+.featured-section{margin:22px 0 25px}
+.featured-products{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:13px}
+.featured-product{min-width:0;overflow:hidden;border:1px solid #1b3b5d;border-radius:17px;background:linear-gradient(145deg,#0e1c2e,#07111f);transition:transform .2s,border-color .2s}
+.featured-product:hover{transform:translateY(-3px);border-color:#ff8138}
+.featured-top{display:flex;justify-content:space-between;align-items:center;gap:6px;padding:12px 12px 0}
+.platform{display:inline-block;border-radius:7px;padding:6px 7px;font-size:8px;font-weight:900;white-space:nowrap}
+.platform.shopee{background:#ff6b2219;color:#ff9d63;border:1px solid #ff6b2238}
+.platform.mercado{background:#ffd34b15;color:#ffe082;border:1px solid #ffd34b35}
+.discount{font-size:9px;font-weight:900;color:#55e5a5;background:#1ed18b17;border:1px solid #1ed18b30;border-radius:7px;padding:6px}
+.featured-art{height:135px;display:grid;place-items:center;font-size:70px;margin:10px 12px 0;border-radius:12px;position:relative;overflow:hidden}
+.featured-art:after{content:"";position:absolute;inset:0;background:radial-gradient(circle at 50% 40%,#ffffff0b,transparent 65%);pointer-events:none}
+.art-orange{background:radial-gradient(circle at 50% 40%,#783318,#1c1720 72%);filter:drop-shadow(0 0 0 transparent)}
+.art-blue{background:radial-gradient(circle at 50% 40%,#174b72,#101b2d 72%)}
+.art-purple{background:radial-gradient(circle at 50% 40%,#482a76,#17162c 72%)}
+.featured-info{padding:13px}
+.featured-category{font-size:8px;letter-spacing:1.2px;font-weight:900;color:#879bb7}
+.featured-info h3{font-size:13px;line-height:1.4;margin:7px 0 10px;min-height:36px;color:#f4f7fc}
+.featured-prices{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.featured-prices b{font-size:19px;color:#55e5a5;letter-spacing:-.5px}
+.featured-prices del{font-size:10px;color:#71819a}
+.featured-footer{display:flex;justify-content:space-between;align-items:center;gap:6px;border-top:1px solid #1b3048;margin-top:12px;padding-top:11px}
+.featured-footer>span{font-size:10px;color:#ffd16b;white-space:nowrap}
+.featured-footer small{font-size:8px;color:#879bb7}
+.featured-footer button{border:1px solid #ff793c55;border-radius:8px;padding:8px 9px;background:linear-gradient(100deg,#ff4c1c,#ff8b1e);color:#fff;font-size:8px;font-weight:900;white-space:nowrap;cursor:pointer}
+.demo-disclaimer{font-size:9px;color:#687e9a;margin:10px 2px 0}
+.live-dot{display:inline-block;width:7px;height:7px;vertical-align:middle;margin-left:5px;border-radius:50%;background:#39e69c;box-shadow:0 0 12px #39e69c88}
+.daily-missions{display:grid;grid-template-columns:.8fr 1.2fr;gap:20px;margin:18px 0 15px;padding:22px;border:1px solid #493675;border-radius:19px;background:radial-gradient(ellipse at 0 0,#7042bc20,transparent 50%),linear-gradient(120deg,#12162b,#0a1424)}
+.mission-heading{display:flex;justify-content:space-between;gap:10px;align-items:flex-start}
+.mission-heading h2{font-size:22px;letter-spacing:-.7px;margin:7px 0}
+.mission-heading p{font-size:11px;line-height:1.6;color:#95a5bf;margin:0;max-width:250px}
+.mission-trophy{display:grid;place-items:center;min-width:54px;height:54px;border-radius:16px;background:#8055d526;border:1px solid #8e62ed45;font-size:28px}
+.mission-list{display:grid;gap:10px}
+.mission-row{display:flex;align-items:center;gap:11px;padding:12px;border:1px solid #27334d;background:#0b1322;border-radius:13px}
+.mission-symbol{display:grid;place-items:center;flex:0 0 37px;height:37px;border-radius:11px;background:#ff782019;font-size:18px}
+.purple-symbol{background:#8b5cf620}.green-symbol{background:#27d99a18}
+.mission-copy{flex:1;min-width:0}
+.mission-copy b{display:block;font-size:11px;color:#e9effa}
+.mission-copy small{display:block;margin:4px 0 7px;font-size:9px;color:#8295b0}
+.mission-progress{height:4px;border-radius:99px;background:#253148;overflow:hidden}
+.mission-progress i{display:block;height:100%;border-radius:99px;background:linear-gradient(90deg,#ff6b22,#ffc247)}
+.mission-row>strong{font-size:10px;color:#c4a1ff;white-space:nowrap}
+@media(max-width:899px){.featured-products{grid-template-columns:1fr;gap:10px}.featured-product{display:grid;grid-template-columns:105px minmax(0,1fr);grid-template-rows:auto 1fr}.featured-top{grid-column:1/-1;padding:11px 11px 0}.featured-art{grid-column:1;grid-row:2;height:112px;margin:10px 0 12px 11px;font-size:54px}.featured-info{grid-column:2;grid-row:2;padding:10px 11px}.featured-info h3{font-size:12px;min-height:0;margin:6px 0}.featured-prices b{font-size:17px}.featured-footer{margin-top:8px;padding-top:8px}.featured-footer button{font-size:7px;padding:7px}.daily-missions{grid-template-columns:1fr;gap:15px;padding:16px}.mission-heading h2{font-size:20px}.mission-trophy{min-width:45px;height:45px;font-size:23px}}
+
 </style>
 </head>
 <body>
@@ -162,7 +207,12 @@ body{background:#030a16!important;background-image:radial-gradient(ellipse at 70
 <button class="mode" data-mode="price"><strong>💰 Adivinhe o Preço</strong><small>Qual é o preço real?</small></button>
 <button class="mode" data-mode="duel"><strong>⚔️ Duelo</strong><small>Escolha seu favorito</small></button>
 
-</div><section class="discovery-grid"><article class="discovery-card offers-card"><div class="discovery-icon">🛍️</div><div><span class="discovery-eyebrow">VITRINE DE OFERTAS</span><h3>Achadinhos em destaque</h3><p>Descubra produtos da Shopee e do Mercado Livre enquanto joga.</p></div><div class="market-tags"><span>🟠 SHOPEE</span><span>🟡 MERCADO LIVRE</span></div></article><article class="discovery-card missions-card"><div class="discovery-icon">🎯</div><div><span class="discovery-eyebrow">DESAFIOS DIÁRIOS</span><h3>Missões e recompensas</h3><p>Jogue rodadas, acerte desafios e aumente seu saldo de moedas.</p></div><button class="mission-cta" onclick="setMode('hunt')">COMEÇAR MISSÃO <span>→</span></button></article></section></section>
+</div><section class="discovery-grid"><article class="discovery-card offers-card"><div class="discovery-icon">🛍️</div><div><span class="discovery-eyebrow">VITRINE DE OFERTAS</span><h3>Achadinhos em destaque</h3><p>Descubra produtos da Shopee e do Mercado Livre enquanto joga.</p></div><div class="market-tags"><span>🟠 SHOPEE</span><span>🟡 MERCADO LIVRE</span></div></article><article class="discovery-card missions-card"><div class="discovery-icon">🎯</div><div><span class="discovery-eyebrow">DESAFIOS DIÁRIOS</span><h3>Missões e recompensas</h3><p>Jogue rodadas, acerte desafios e aumente seu saldo de moedas.</p></div><button class="mission-cta" onclick="setMode('hunt')">COMEÇAR MISSÃO <span>→</span></button></article></section>
+<section class="featured-section"><div class="section-heading"><div><small>SELEÇÃO DO DIA</small><h2>Ofertas em destaque <span class="live-dot"></span></h2></div><span>DEMO VISUAL</span></div><div class="featured-products">
+<article class="featured-product"><div class="featured-top"><span class="platform shopee">🟠 SHOPEE</span><span class="discount">-42%</span></div><div class="featured-art art-orange">🎧</div><div class="featured-info"><span class="featured-category">ELETRÔNICOS</span><h3>Fone Bluetooth sem fio</h3><div class="featured-prices"><b>R$ 49,90</b><del>R$ 86,90</del></div><div class="featured-footer"><span>⭐ 4,8 <small>· oferta exemplo</small></span><button onclick="demoOffer('Fone Bluetooth sem fio')">VER OFERTA ↗</button></div></div></article>
+<article class="featured-product"><div class="featured-top"><span class="platform mercado">🟡 MERCADO LIVRE</span><span class="discount">-35%</span></div><div class="featured-art art-blue">⌚</div><div class="featured-info"><span class="featured-category">ACESSÓRIOS</span><h3>Relógio inteligente</h3><div class="featured-prices"><b>R$ 89,90</b><del>R$ 139,90</del></div><div class="featured-footer"><span>⭐ 4,7 <small>· oferta exemplo</small></span><button onclick="demoOffer('Relógio inteligente')">VER OFERTA ↗</button></div></div></article>
+<article class="featured-product"><div class="featured-top"><span class="platform shopee">🟠 SHOPEE</span><span class="discount">-28%</span></div><div class="featured-art art-purple">🏠</div><div class="featured-info"><span class="featured-category">CASA & UTILIDADES</span><h3>Organizador multiuso</h3><div class="featured-prices"><b>R$ 35,90</b><del>R$ 49,90</del></div><div class="featured-footer"><span>⭐ 4,9 <small>· oferta exemplo</small></span><button onclick="demoOffer('Organizador multiuso')">VER OFERTA ↗</button></div></div></article></div><p class="demo-disclaimer">* Produtos, preços, descontos e avaliações são ilustrativos nesta versão de demonstração.</p></section>
+<section class="daily-missions"><div class="mission-heading"><div><span class="discovery-eyebrow">SUBA DE NÍVEL</span><h2>Missões diárias</h2><p>Complete desafios e ganhe recompensas extras.</p></div><div class="mission-trophy">🏆</div></div><div class="mission-list"><div class="mission-row"><div class="mission-symbol">🎮</div><div class="mission-copy"><b>Jogue sua primeira partida</b><small>Entre em qualquer modo de jogo</small><div class="mission-progress"><i style="width:0%"></i></div></div><strong>+50 ⭐</strong></div><div class="mission-row"><div class="mission-symbol purple-symbol">🎯</div><div class="mission-copy"><b>Acerte 3 desafios</b><small>Treine suas habilidades de caçador</small><div class="mission-progress"><i style="width:0%"></i></div></div><strong>+100 ⭐</strong></div><div class="mission-row"><div class="mission-symbol green-symbol">🪙</div><div class="mission-copy"><b>Acumule 100 moedas</b><small>Ganhe moedas jogando rodadas</small><div class="mission-progress"><i style="width:0%"></i></div></div><strong>+1 baú</strong></div></div></section></section>
 
 <section id="gamePanel" class="game panel active"></section>
 <section id="shopPanel" class="panel"><div class="game"><div class="gamehead"><b>🛒 Loja</b><span class="tag">🪙 <span id="shopCoins">0</span></span></div><p class="shop-note">Troque suas moedas por itens que ajudam nas partidas.</p><div id="shopItems" class="shop-grid"></div><div class="profile-section"><b>🎒 Seus itens</b><div id="shopInventory" class="inventory"></div></div></div></section>
@@ -186,7 +236,7 @@ const $=id=>document.getElementById(id);
 const money=v=>'R$ '+Number(v).toFixed(2).replace('.',',');
 const escapeHtml=s=>String(s??'').replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'}[m]));
 
-async function get(url){const r=await fetch(api+url);if(!r.ok)throw Error('Falha ao carregar');return r.json()}
+function demoOffer(name){alert('Demonstração visual: “'+name+'”. Este card e preço são fictícios. Na próxima etapa podemos conectar a oferta real da Shopee ou do Mercado Livre.')}\n\nasync function get(url){const r=await fetch(api+url);if(!r.ok)throw Error('Falha ao carregar');return r.json()}
 async function post(url,data){const r=await fetch(api+url,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(data)});const j=await r.json();if(!r.ok)throw Error(j.erro||'Erro');return j}
 
 function updatePlayer(p){if(!p)return;$('points').textContent=p.pontos||0;$('coins').textContent=p.moedas||0;$('streak').textContent=(p.sequencia||0)+' acertos';$('best').textContent=p.melhor_sequencia||0;updateProfile(p);if(p.bonus_diario?.recebeu)alert('🎁 Bônus diário! +'+p.bonus_diario.moedas+' moedas e +'+p.bonus_diario.pontos+' pontos.');}
