@@ -141,13 +141,7 @@ function setMode(mode){
  if(mode==='ranking'){ $('rankingPanel').classList.add('active'); ranking() }
  if(mode==='shop'){ $('shopPanel').classList.add('active'); shop() }
 }
-document.querySelectorAll('.mode').forEach(b=>b.classList.toggle('active',b.dataset.mode===mode));
- if(mode==='hunt'){ $('rankingPanel').classList.remove('active');$('gamePanel').classList.add('active');hunt() }
- if(mode==='price'){ $('rankingPanel').classList.remove('active');$('gamePanel').classList.add('active');price() }
- if(mode==='duel'){ $('rankingPanel').classList.remove('active');$('gamePanel').classList.add('active');duel() }
- if(mode==='ranking'){ $('gamePanel').classList.remove('active');$('shopPanel').classList.remove('active');$('profilePanel').classList.remove('active');$('rankingPanel').classList.add('active');ranking() }
- if(mode==='shop'){ $('gamePanel').classList.remove('active');$('rankingPanel').classList.remove('active');$('profilePanel').classList.remove('active');$('shopPanel').classList.add('active');shop() }
-}
+
 document.querySelectorAll('.mode').forEach(b=>b.addEventListener('click',()=>setMode(b.dataset.mode)));
 document.querySelectorAll('.nav button').forEach(b=>b.addEventListener('click',()=>{
  document.querySelectorAll('.nav button').forEach(x=>x.classList.remove('active'));b.classList.add('active');
