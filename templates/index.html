@@ -106,6 +106,33 @@ body{background:#030a16!important;background-image:radial-gradient(ellipse at 70
 @media(max-width:899px){.desktop-sidebar{display:none!important}.app{margin:0 auto!important;max-width:650px!important;padding:14px 13px 100px!important}.hero{min-height:215px!important;padding:22px!important}.hero h1{font-size:29px!important;max-width:75%!important}.hero p{max-width:70%!important;font-size:11px!important}.hero:after{font-size:112px!important;right:-8px!important;bottom:-7px!important}.modes{grid-template-columns:repeat(2,minmax(0,1fr))!important}.mode{min-height:108px!important;padding:13px!important}.mode strong{font-size:12px!important}.mode small{font-size:10px!important}}
 @media(max-width:390px){.hero h1{font-size:24px!important}.hero:after{font-size:86px!important}.stats .pill{padding:8px!important}}
 
+/* Estrutura e componentes alinhados à referência visual */
+.hero{justify-content:flex-start!important}
+.hero-copy{position:relative;z-index:1;width:72%;max-width:700px}
+.hero-kicker{display:inline-flex;flex-wrap:wrap;gap:7px;align-items:center;margin-bottom:17px;color:#ffb04d;font-size:10px;font-weight:900;letter-spacing:1.3px}
+.hero-kicker span{color:#9db0ca}
+.hero-actions{display:flex;flex-wrap:wrap;gap:8px;margin-top:19px}
+.hero-actions span{padding:9px 12px;border:1px solid #ff8a2738;border-radius:9px;background:#ff7a0014;color:#ffd29a;font-size:9px;font-weight:900;letter-spacing:.5px}
+.section-heading{display:flex;justify-content:space-between;align-items:end;gap:12px;margin:24px 0 13px}
+.section-heading small{font-size:9px;font-weight:900;letter-spacing:1.5px;color:#ff9c48}
+.section-heading h2{font-size:22px;letter-spacing:-.6px;margin:5px 0 0}
+.section-heading>span{font-size:9px;font-weight:800;letter-spacing:.8px;color:#8397b3;padding-bottom:4px}
+.discovery-grid{display:grid;grid-template-columns:1.15fr 1fr;gap:13px;margin:17px 0 22px}
+.discovery-card{position:relative;overflow:hidden;display:flex;flex-direction:column;align-items:flex-start;gap:10px;min-height:190px;padding:20px;border:1px solid #1b3b5d;border-radius:17px;background:linear-gradient(140deg,#0e2035,#071321)}
+.discovery-card:after{content:"";position:absolute;right:-30px;top:-35px;width:150px;height:150px;border-radius:50%;background:#168cff0b;pointer-events:none}
+.discovery-icon{display:grid;place-items:center;width:43px;height:43px;border-radius:13px;background:#ff7a0019;border:1px solid #ff7a0030;font-size:22px}
+.discovery-eyebrow{color:#ffab5a;font-size:9px;font-weight:900;letter-spacing:1.2px}
+.discovery-card h3{margin:5px 0 6px;font-size:17px;letter-spacing:-.3px}
+.discovery-card p{margin:0;color:#93a6c0;font-size:11px;line-height:1.6;max-width:420px}
+.market-tags{display:flex;flex-wrap:wrap;gap:7px;margin-top:auto;padding-top:7px}
+.market-tags span{border:1px solid #25415e;background:#091629;border-radius:8px;padding:7px 9px;font-size:9px;font-weight:900;color:#dbe6f5}
+.missions-card{background:radial-gradient(ellipse at 100% 0%,#5b25a329,transparent 55%),linear-gradient(140deg,#17152f,#0a1426);border-color:#42316d}
+.missions-card .discovery-icon{background:#8b5cf620;border-color:#8b5cf650}
+.missions-card .discovery-eyebrow{color:#c0a3ff}
+.mission-cta{display:flex;justify-content:space-between;align-items:center;gap:20px;width:100%;margin-top:auto;padding:11px 13px;border:1px solid #8255e8;background:linear-gradient(100deg,#6639c8,#8b5cf6);border-radius:10px;color:white;font-size:10px;font-weight:900;letter-spacing:.5px;cursor:pointer}
+@media(max-width:899px){.hero-copy{width:100%}.hero-kicker{max-width:78%;font-size:8px;line-height:1.5}.hero-actions{max-width:75%;gap:6px}.hero-actions span{font-size:8px;padding:8px}.section-heading{margin-top:20px}.section-heading h2{font-size:19px}.section-heading>span{font-size:8px}.discovery-grid{grid-template-columns:1fr;gap:9px;margin-top:13px}.discovery-card{min-height:160px;padding:16px}.discovery-card h3{font-size:16px}}
+@media(max-width:420px){.hero-copy{width:100%}.hero-kicker{max-width:76%;font-size:7px;letter-spacing:.7px}.hero h1{max-width:80%!important}.hero p{max-width:73%!important}.hero-actions{max-width:72%}.hero-actions span{font-size:7px}.section-heading>span{max-width:100px;text-align:right;line-height:1.4}}
+
 </style>
 </head>
 <body>
@@ -125,17 +152,17 @@ body{background:#030a16!important;background-image:radial-gradient(ellipse at 70
 <header class="top"><div class="brand"><div class="fox">🦊</div><div><b>Caça aos Achadinhos</b><small>Shopee + Mercado Livre</small></div></div><div class="stats"><div class="pill">⭐ <span id="points">0</span></div><div class="pill">🪙 <span id="coins">0</span></div></div></header>
 
 <section id="gameHome" class="game-home"><section class="hero">
-<h1>Encontre o achadinho 🔥</h1>
-<p>Jogue, acumule pontos e descubra ofertas que valem a pena.</p>
+<div class="hero-copy"><div class="hero-kicker">🛍️ CENTRAL DE ACHADINHOS <span>• SHOPEE + MERCADO LIVRE</span></div><h1>Encontre o achadinho 🔥</h1>
+<p>Entre na caça, acumule moedas e descubra ofertas selecionadas da Shopee e do Mercado Livre.</p><div class="hero-actions"><span>🎮 JOGUE AGORA</span><span>🪙 GANHE RECOMPENSAS</span></div></div>
 <div class="streak">🔥 Sequência: <b id="streak">0 dias</b> · Melhor: <b id="best">0</b></div>
 </section>
 
-<div class="modes">
+<div class="section-heading"><div><small>ESCOLHA SUA EXPERIÊNCIA</small><h2>Modos de jogo</h2></div><span>3 MODOS DISPONÍVEIS</span></div><div class="modes">
 <button class="mode active" data-mode="hunt"><strong>🎁 Caça ao Achadinho</strong><small>Encontre a caixa premiada</small></button>
 <button class="mode" data-mode="price"><strong>💰 Adivinhe o Preço</strong><small>Qual é o preço real?</small></button>
 <button class="mode" data-mode="duel"><strong>⚔️ Duelo</strong><small>Escolha seu favorito</small></button>
 
-</div></section>
+</div><section class="discovery-grid"><article class="discovery-card offers-card"><div class="discovery-icon">🛍️</div><div><span class="discovery-eyebrow">VITRINE DE OFERTAS</span><h3>Achadinhos em destaque</h3><p>Descubra produtos da Shopee e do Mercado Livre enquanto joga.</p></div><div class="market-tags"><span>🟠 SHOPEE</span><span>🟡 MERCADO LIVRE</span></div></article><article class="discovery-card missions-card"><div class="discovery-icon">🎯</div><div><span class="discovery-eyebrow">DESAFIOS DIÁRIOS</span><h3>Missões e recompensas</h3><p>Jogue rodadas, acerte desafios e aumente seu saldo de moedas.</p></div><button class="mission-cta" onclick="setMode('hunt')">COMEÇAR MISSÃO <span>→</span></button></article></section></section>
 
 <section id="gamePanel" class="game panel active"></section>
 <section id="shopPanel" class="panel"><div class="game"><div class="gamehead"><b>🛒 Loja</b><span class="tag">🪙 <span id="shopCoins">0</span></span></div><p class="shop-note">Troque suas moedas por itens que ajudam nas partidas.</p><div id="shopItems" class="shop-grid"></div><div class="profile-section"><b>🎒 Seus itens</b><div id="shopInventory" class="inventory"></div></div></div></section>
