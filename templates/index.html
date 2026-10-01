@@ -105,7 +105,7 @@ async function shop(){
   ]);
   updatePlayer(p);
   $('shopCoins').textContent=p.moedas||0;
-  $('shopItems').innerHTML=items.map(i=>'<div class="shop-item"><b>'+i.nome+'</b><p>'+i.descricao+'</p><button class="buy" onclick="buyItem(\\''+i.id+'\\')">🪙 '+i.preco_moedas+' — COMPRAR</button></div>').join('');
+  $('shopItems').innerHTML=items.map(i=>'<div class="shop-item"><b>'+i.nome+'</b><p>'+i.descricao+'</p><button class="buy" onclick="buyItem(\''+i.id+'\')">🪙 '+i.preco_moedas+' — COMPRAR</button></div>').join('');
   renderInventory(p.inventario||{});
  }catch(e){
   $('shopItems').innerHTML='<div class="hint">Loja indisponível: '+escapeHtml(e.message)+'</div>';
