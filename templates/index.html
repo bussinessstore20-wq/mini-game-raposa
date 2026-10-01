@@ -24,10 +24,11 @@
 <button class="mode active" data-mode="hunt"><strong>🎁 Caça ao Achadinho</strong><small>Encontre a caixa premiada</small></button>
 <button class="mode" data-mode="price"><strong>💰 Adivinhe o Preço</strong><small>Qual é o preço real?</small></button>
 <button class="mode" data-mode="duel"><strong>⚔️ Duelo</strong><small>Escolha seu favorito</small></button>
-<button class="mode" data-mode="ranking"><strong>🏆 Ranking</strong><small>Veja os caçadores</small></button>
+<button class="mode" data-mode="ranking"><strong>🏆 Ranking</strong><small>Veja os caçadores</small></button><button class="mode" data-mode="shop"><strong>🛒 Loja</strong><small>Gaste suas moedas</small></button>
 </div>
 
 <section id="gamePanel" class="game panel active"></section>
+<section id="shopPanel" class="panel"><div class="game"><div class="gamehead"><b>🛒 Loja</b><span class="tag">MOEDAS</span></div><div id="shopItems" class="ranking"></div></div></section>
 <section id="rankingPanel" class="panel"><div class="game"><div class="gamehead"><b>🏆 Ranking</b><span class="tag">TOP 20</span></div><div id="ranking" class="ranking"></div></div></section>
 </div>
 
@@ -49,7 +50,7 @@ const escapeHtml=s=>String(s??'').replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;'
 async function get(url){const r=await fetch(api+url);if(!r.ok)throw Error('Falha ao carregar');return r.json()}
 async function post(url,data){const r=await fetch(api+url,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(data)});const j=await r.json();if(!r.ok)throw Error(j.erro||'Erro');return j}
 
-function updatePlayer(p){if(!p)return;$('points').textContent=p.pontos||0;$('coins').textContent=p.moedas||0;$('streak').textContent=(p.sequencia||0)+' dias';$('best').textContent=p.melhor_sequencia||0}
+function updatePlayer(p){if(!p)return;$('points').textContent=p.pontos||0;$('coins').textContent=p.moedas||0;$('streak').textContent=(p.sequencia||0)+' acertos';$('best').textContent=p.melhor_sequencia||0;if(p.bonus_diario?.recebeu)alert('🎁 Bônus diário! +'+p.bonus_diario.moedas+' moedas e +'+p.bonus_diario.pontos+' pontos.');}
 
 async function loadPlayer(){try{updatePlayer(await get('/api/player?user_id='+encodeURIComponent(playerId)+'&name='+encodeURIComponent(playerName)))}catch(e){}}
 
@@ -88,6 +89,7 @@ async function answerDuel(id){
 async function showOffer(id){
  try{const d=await post('/api/offer/view',{user_id:playerId,name:playerName,produto_id:id});updatePlayer(d.player);if(d.url&&d.url!=='#')window.open(d.url,'_blank');else alert('A oferta será conectada ao produto real na próxima integração.')}catch(e){}
 }
+async function shop(){try{const items=await get('/api/shop');$('shopItems').innerHTML=items.map(i=>'<div class="rank"><div class="rankname"><b>'+i.nome+'</b><br><span style="color:#8f95a3;font-size:10px">'+i.descricao+'</span></div><div class="rankpoints">🪙 '+i.preco_moedas+'</div></div>').join('')}catch(e){$('shopItems').innerHTML='<div class="hint">Loja indisponível.</div>'}}
 async function ranking(){
  $('ranking').innerHTML='<div class="hint">Carregando...</div>';
  try{const list=await get('/api/ranking');$('ranking').innerHTML=list.length?list.map(r=>'<div class="rank"><div class="rankpos">#'+r.posicao+'</div><div class="rankname">'+escapeHtml(r.nome)+'</div><div class="rankpoints">⭐ '+r.pontos+'</div></div>').join(''):'<div class="hint">Você será o primeiro do ranking. Jogue agora!</div>'}catch(e){$('ranking').innerHTML='<div class="hint">Não foi possível carregar o ranking.</div>'}
@@ -98,7 +100,8 @@ function setMode(mode){
  if(mode==='hunt'){ $('rankingPanel').classList.remove('active');$('gamePanel').classList.add('active');hunt() }
  if(mode==='price'){ $('rankingPanel').classList.remove('active');$('gamePanel').classList.add('active');price() }
  if(mode==='duel'){ $('rankingPanel').classList.remove('active');$('gamePanel').classList.add('active');duel() }
- if(mode==='ranking'){ $('gamePanel').classList.remove('active');$('rankingPanel').classList.add('active');ranking() }
+ if(mode==='ranking'){ $('gamePanel').classList.remove('active');$('shopPanel').classList.remove('active');$('rankingPanel').classList.add('active');ranking() }
+ if(mode==='shop'){ $('gamePanel').classList.remove('active');$('rankingPanel').classList.remove('active');$('shopPanel').classList.add('active');shop() }
 }
 document.querySelectorAll('.mode').forEach(b=>b.addEventListener('click',()=>setMode(b.dataset.mode)));
 document.querySelectorAll('.nav button').forEach(b=>b.addEventListener('click',()=>{
