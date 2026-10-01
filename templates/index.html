@@ -8,7 +8,7 @@
 <style>
 :root{--bg:#08090d;--card:#12141b;--card2:#191c25;--line:#292d38;--orange:#ff7a00;--yellow:#ffc247;--green:#36d98a;--text:#f8f8fa;--muted:#8f95a3}
 *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}body{margin:0;background:radial-gradient(circle at 50% -10%,#ff7a0028,transparent 35%),var(--bg);color:var(--text);font-family:Inter,Arial,sans-serif;min-height:100vh}.app{max-width:460px;margin:auto;padding:14px 12px 90px}.top{display:flex;align-items:center;justify-content:space-between;margin-bottom:12px}.brand{display:flex;align-items:center;gap:10px}.fox{width:48px;height:48px;border-radius:15px;background:linear-gradient(145deg,#ff9a3d,#ff6200);display:grid;place-items:center;font-size:27px;box-shadow:0 10px 35px #ff6b0030}.brand b{font-size:18px}.brand small{display:block;color:var(--muted);font-size:10px;margin-top:3px}.stats{display:flex;gap:6px}.pill{background:var(--card);border:1px solid var(--line);padding:8px 9px;border-radius:11px;font-size:11px}.pill span{color:var(--yellow);font-weight:800}.hero{background:linear-gradient(145deg,#171a22,#101218);border:1px solid var(--line);border-radius:22px;padding:18px;margin-bottom:12px}.hero h1{margin:0 0 5px;font-size:25px}.hero p{margin:0;color:var(--muted);font-size:12px;line-height:1.5}.streak{margin-top:13px;padding:10px 12px;background:#ff7a0012;border:1px solid #ff7a0030;border-radius:13px;font-size:11px}.streak b{color:#ff9b4a}.modes{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:12px}.mode{border:1px solid var(--line);background:var(--card);border-radius:16px;padding:13px;text-align:left;color:var(--text);cursor:pointer}.mode.active{border-color:#ff7a0070;background:#ff7a0014}.mode strong{display:block;font-size:13px}.mode small{display:block;color:var(--muted);margin-top:4px;font-size:9px}.game{background:var(--card);border:1px solid var(--line);border-radius:22px;padding:15px;min-height:330px}.gamehead{display:flex;justify-content:space-between;align-items:center;margin-bottom:14px}.tag{font-size:9px;color:#ff9b4a;background:#ff7a0015;padding:6px 8px;border-radius:8px;font-weight:800}.question{font-size:17px;font-weight:800;margin-bottom:13px}.boxes{display:grid;grid-template-columns:repeat(3,1fr);gap:9px}.box{min-height:155px;border:1px solid #303541;background:linear-gradient(145deg,#1c2029,#12151c);border-radius:17px;color:white;cursor:pointer;padding:10px;transition:.15s}.box:active{transform:scale(.97)}.box .emoji{font-size:42px;margin:16px 0 10px}.box b{font-size:10px;display:block;line-height:1.25}.product{border:1px solid #303541;background:#171a22;border-radius:18px;padding:13px}.productvisual{height:120px;border-radius:14px;background:linear-gradient(145deg,#252a35,#151821);display:grid;place-items:center;font-size:60px;margin-bottom:12px}.product h3{margin:0;font-size:15px}.meta{display:flex;gap:6px;margin:7px 0}.badge{font-size:8px;padding:5px 7px;border-radius:7px;background:#ffffff09;color:var(--muted)}.price{font-size:23px;font-weight:900;color:#61e69b}.old{text-decoration:line-through;color:#707683;font-size:10px;margin-left:5px}.options{display:grid;gap:8px;margin-top:12px}.option{border:1px solid var(--line);background:#1a1d26;border-radius:12px;padding:13px;color:white;font-weight:800;cursor:pointer}.duel{display:grid;grid-template-columns:1fr 1fr;gap:8px}.bottom{position:fixed;bottom:0;left:0;right:0;background:#0b0d12ed;border-top:1px solid var(--line);backdrop-filter:blur(12px);padding:9px 12px;z-index:5}.nav{max-width:460px;margin:auto;display:grid;grid-template-columns:repeat(3,1fr);gap:6px}.nav button{background:transparent;border:0;color:#747b89;padding:8px;font-size:9px;cursor:pointer}.nav button.active{color:#ff984d}.panel{display:none}.panel.active{display:block}.ranking{display:grid;gap:7px}.rank{display:flex;align-items:center;gap:10px;background:var(--card);border:1px solid var(--line);padding:11px;border-radius:13px}.rankpos{width:25px;text-align:center;color:#ffb04f;font-weight:900}.rankname{flex:1;font-size:12px}.rankpoints{font-size:11px;color:var(--yellow);font-weight:800}.result{margin-top:12px;border-radius:15px;padding:12px;font-size:11px;line-height:1.5}.good{background:#36d98a12;border:1px solid #36d98a30;color:#8af0bb}.bad{background:#ff535312;border:1px solid #ff535330;color:#ff9999}.offer{margin-top:10px;width:100%;border:0;background:linear-gradient(135deg,#ff963f,#ff6100);color:white;padding:13px;border-radius:12px;font-weight:900;cursor:pointer}.hint{text-align:center;color:var(--muted);font-size:10px;padding:14px}.hidden{display:none!important}
-</style>
+.next{display:block;width:100%;margin-top:12px;padding:13px;border:0;border-radius:12px;font-weight:800;background:#fff;color:#111;cursor:pointer}.result .offer{margin-top:10px}.result{margin-top:14px;padding:14px;border-radius:14px}.result.good{background:#123d2a}.result.bad{background:#402020}</style>
 </head>
 <body>
 <div class="app">
@@ -54,7 +54,8 @@ function updatePlayer(p){if(!p)return;$('points').textContent=p.pontos||0;$('coi
 
 async function loadPlayer(){try{updatePlayer(await get('/api/player?user_id='+encodeURIComponent(playerId)+'&name='+encodeURIComponent(playerName)))}catch(e){}}
 
-function resultBox(ok,text){return '<div class="result '+(ok?'good':'bad')+'">'+text+'</div>'}
+function resultBox(ok,text,nextMode){return '<div class="result '+(ok?'good':'bad')+'">'+text+'<button class="next" onclick="nextGame(\''+(nextMode||'hunt')+'\')">PRÓXIMO JOGO →</button></div>'}
+function nextGame(mode){setMode(mode||'hunt');window.scrollTo({top:0,behavior:'smooth'})}
 
 async function hunt(){
  currentMode='hunt';
@@ -64,7 +65,7 @@ async function hunt(){
 }
 async function answerHunt(pos,id,el){
  document.querySelectorAll('.box').forEach(x=>x.disabled=true);
- try{const d=await post('/api/game/hunt/answer',{user_id:playerId,name:playerName,rodada_id:window.huntRound.rodada_id,posicao:pos,produto_id:id});updatePlayer(d.player);$('gamePanel').insertAdjacentHTML('beforeend',resultBox(d.acertou,'<b>'+(d.acertou?'🎉 ACERTOU!':'😅 QUASE!')+'</b><br>'+(d.acertou?'Você encontrou o achadinho e ganhou 100 pontos.':'O achadinho era <b>'+escapeHtml(d.achadinho.nome)+'</b>.')+'<button class="offer" onclick="showOffer(\''+d.achadinho.id+'\')">🛒 VER OFERTA</button>'))}catch(e){alert(e.message)}
+ try{const d=await post('/api/game/hunt/answer',{user_id:playerId,name:playerName,rodada_id:window.huntRound.rodada_id,posicao:pos,produto_id:id});updatePlayer(d.player);$('gamePanel').insertAdjacentHTML('beforeend',resultBox(d.acertou,'<b>'+(d.acertou?'🎉 ACERTOU!':'😅 QUASE!')+'</b><br>'+(d.acertou?'Você encontrou o achadinho e ganhou 100 pontos.':'O achadinho era <b>'+escapeHtml(d.achadinho.nome)+'</b>.')+'<button class="offer" onclick="showOffer(\''+d.achadinho.id+'\')">🛒 VER OFERTA</button>','price'))}catch(e){alert(e.message)}
 }
 async function price(){
  currentMode='price';
@@ -75,7 +76,7 @@ async function price(){
 }
 async function answerPrice(v){
  document.querySelectorAll('.option').forEach(x=>x.disabled=true);
- try{const d=await post('/api/game/price/answer',{user_id:playerId,name:playerName,rodada_id:window.priceRound.rodada_id,preco:v});updatePlayer(d.player);$('gamePanel').insertAdjacentHTML('beforeend',resultBox(d.acertou,'<b>'+(d.acertou?'🎯 PREÇO EXATO!':'😅 PASSOU PERTO!')+'</b><br>O preço real era <b>'+money(d.preco_real)+'</b>.<button class="offer" onclick="showOffer(\''+d.produto.id+'\')">🛒 VER OFERTA</button>'))}catch(e){alert(e.message)}
+ try{const d=await post('/api/game/price/answer',{user_id:playerId,name:playerName,rodada_id:window.priceRound.rodada_id,preco:v});updatePlayer(d.player);$('gamePanel').insertAdjacentHTML('beforeend',resultBox(d.acertou,'<b>'+(d.acertou?'🎯 PREÇO EXATO!':'😅 PASSOU PERTO!')+'</b><br>O preço real era <b>'+money(d.preco_real)+'</b>.<button class="offer" onclick="showOffer(\''+d.produto.id+'\')">🛒 VER OFERTA</button>','duel'))}catch(e){alert(e.message)}
 }
 async function duel(){
  currentMode='duel';
@@ -84,7 +85,7 @@ async function duel(){
  window.duelRound=d;
 }
 async function answerDuel(id){
- try{const d=await post('/api/game/duel/answer',{user_id:playerId,name:playerName,rodada_id:window.duelRound.rodada_id,produto_id:id});updatePlayer(d.player);$('gamePanel').insertAdjacentHTML('beforeend',resultBox(true,'❤️ Boa escolha! Você ganhou <b>50 pontos</b>.<button class="offer" onclick="showOffer(\''+id+'\')">🛒 VER OFERTA</button>'))}catch(e){alert(e.message)}
+ try{const d=await post('/api/game/duel/answer',{user_id:playerId,name:playerName,rodada_id:window.duelRound.rodada_id,produto_id:id});updatePlayer(d.player);$('gamePanel').insertAdjacentHTML('beforeend',resultBox(true,'❤️ Boa escolha! Você ganhou <b>50 pontos</b>.<button class="offer" onclick="showOffer(\''+id+'\')">🛒 VER OFERTA</button>','hunt'))}catch(e){alert(e.message)}
 }
 async function showOffer(id){
  try{const d=await post('/api/offer/view',{user_id:playerId,name:playerName,produto_id:id});updatePlayer(d.player);if(d.url&&d.url!=='#')window.open(d.url,'_blank');else alert('A oferta será conectada ao produto real na próxima integração.')}catch(e){}
