@@ -77,20 +77,41 @@ init_db()
 
 def telegram_auth(init_data):
     bot_token=os.environ.get("TELEGRAM_BOT_TOKEN") or os.environ.get("BOT_TOKEN")
-    if not bot_token or not init_data:
+    if not bot_token:
+        app.logger.error("Telegram auth: bot token ausente nas variáveis TELEGRAM_BOT_TOKEN/BOT_TOKEN")
+        return None
+    if not init_data:
+        app.logger.error("Telegram auth: initData vazio")
         return None
     try:
         from urllib.parse import parse_qsl
         pairs=dict(parse_qsl(init_data,keep_blank_values=True))
         received=pairs.pop("hash",None)
-        if not received: return None
+        if not received:
+            app.logger.error("Telegram auth: hash ausente; campos=%s", sorted(pairs.keys()))
+            return None
+        auth_date=pairs.get("auth_date","0")
+        user_raw=pairs.get("user","")
         check="\n".join(f"{k}={pairs[k]}" for k in sorted(pairs))
+        # Telegram Mini Apps: secret_key = HMAC-SHA256(key=bot_token, data="WebAppData")
         secret=hmac.new(b"WebAppData",bot_token.encode(),hashlib.sha256).digest()
         calc=hmac.new(secret,check.encode(),hashlib.sha256).hexdigest()
-        if not secrets.compare_digest(calc,received): return None
-        if int(time.time())-int(pairs.get("auth_date","0"))>86400: return None
-        return json.loads(pairs["user"])
-    except Exception:
+        if not secrets.compare_digest(calc,received):
+            app.logger.error(
+                "Telegram auth: hash incompatível; campos=%s init_len=%s hash_len=%s token_len=%s",
+                sorted(pairs.keys()), len(init_data), len(received), len(bot_token)
+            )
+            return None
+        if int(time.time())-int(auth_date)>86400:
+            app.logger.error("Telegram auth: initData expirado; auth_date=%s", auth_date)
+            return None
+        user=json.loads(user_raw)
+        if not user.get("id"):
+            app.logger.error("Telegram auth: user.id ausente")
+            return None
+        return user
+    except Exception as exc:
+        app.logger.exception("Telegram auth: erro ao processar initData: %s", exc)
         return None
 
 def save_player(jogador):
