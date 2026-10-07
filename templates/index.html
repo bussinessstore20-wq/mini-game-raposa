@@ -180,9 +180,10 @@ body{background:#030a16!important;background-image:radial-gradient(ellipse at 70
 .mission-row>strong{font-size:10px;color:#c4a1ff;white-space:nowrap}
 @media(max-width:899px){.featured-products{grid-template-columns:1fr;gap:10px}.featured-product{display:grid;grid-template-columns:105px minmax(0,1fr);grid-template-rows:auto 1fr}.featured-top{grid-column:1/-1;padding:11px 11px 0}.featured-art{grid-column:1;grid-row:2;height:112px;margin:10px 0 12px 11px;font-size:54px}.featured-info{grid-column:2;grid-row:2;padding:10px 11px}.featured-info h3{font-size:12px;min-height:0;margin:6px 0}.featured-prices b{font-size:17px}.featured-footer{margin-top:8px;padding-top:8px}.featured-footer button{font-size:7px;padding:7px}.daily-missions{grid-template-columns:1fr;gap:15px;padding:16px}.mission-heading h2{font-size:20px}.mission-trophy{min-width:45px;height:45px;font-size:23px}}
 
+.auth-overlay{position:fixed;inset:0;background:#08090df5;backdrop-filter:blur(14px);z-index:50;display:grid;place-items:center;padding:18px}.auth-card{width:min(430px,100%);background:linear-gradient(145deg,#171a22,#0f1117);border:1px solid #343946;border-radius:26px;padding:25px;box-shadow:0 25px 80px #0008}.auth-logo{width:68px;height:68px;margin:0 auto 12px;border-radius:21px;background:linear-gradient(145deg,#ff9a3d,#ff6200);display:grid;place-items:center;font-size:38px}.auth-card h1{text-align:center;margin:0;font-size:25px}.auth-sub{text-align:center;color:var(--muted);font-size:12px;line-height:1.5;margin:7px 0 20px}.auth-tabs{display:grid;grid-template-columns:1fr 1fr;background:#0b0d12;border:1px solid var(--line);border-radius:12px;padding:4px;margin-bottom:14px}.auth-tabs button{border:0;background:transparent;color:var(--muted);padding:10px;border-radius:9px;font-weight:800}.auth-tabs button.active{background:#ff7a001b;color:#ff9b4a}.auth-form{display:grid;gap:10px}.auth-form label{font-size:10px;color:#9ca2af;font-weight:800;text-transform:uppercase}.auth-form input{width:100%;background:#0d1016;border:1px solid #303541;border-radius:12px;padding:13px;color:white;outline:none}.auth-submit{border:0;background:linear-gradient(135deg,#ff963f,#ff6100);color:#fff;padding:14px;border-radius:13px;font-weight:900;cursor:pointer}.auth-error{min-height:16px;text-align:center;color:#ff9999;font-size:10px}.auth-foot{text-align:center;color:var(--muted);font-size:10px;margin-top:14px}.ranking-me{margin-bottom:10px;background:#ff7a0012;border:1px solid #ff7a0040;border-radius:14px;padding:12px;font-size:11px}.logout-btn{border:1px solid var(--line);background:#171a22;color:#ff9b4a;border-radius:9px;padding:7px 9px;font-size:9px;cursor:pointer}
 </style>
 </head>
-<body>
+<body><div id="authOverlay" class="auth-overlay"><div class="auth-card"><div class="auth-logo">🦊</div><h1>Caça aos Achadinhos</h1><div class="auth-sub">Entre para salvar seus pontos e disputar o ranking.</div><div class="auth-tabs"><button id="loginTab" class="active" onclick="showAuth('login')">ENTRAR</button><button id="registerTab" onclick="showAuth('register')">CRIAR CONTA</button></div><form class="auth-form" onsubmit="submitAuth(event)"><div id="nameField" class="hidden"><label>Nome</label><input id="authName" placeholder="Nome no ranking"></div><label>E-mail</label><input id="authEmail" type="email" placeholder="voce@email.com" required><label>Senha</label><input id="authPassword" type="password" minlength="6" placeholder="Mínimo 6 caracteres" required><div id="authError" class="auth-error"></div><button id="authSubmit" class="auth-submit">ENTRAR NO JOGO</button></form><div class="auth-foot">Sua conta salva sua evolução e sua posição.</div></div></div>
 <aside class="desktop-sidebar" aria-label="Navegação principal">
   <div class="sidebar-brand"><div class="sidebar-fox">🦊</div><div><strong>Caça aos<br>Achadinhos</strong><small>Jogue · Encontre · Economize</small></div></div>
   <div class="sidebar-label">Menu principal</div>
@@ -222,7 +223,7 @@ body{background:#030a16!important;background-image:radial-gradient(ellipse at 70
 </section>
 <section id="shopPanel" class="panel"><div class="game"><div class="gamehead"><b>🛒 Loja</b><span class="tag">🪙 <span id="shopCoins">0</span></span></div><p class="shop-note">Troque suas moedas por itens que ajudam nas partidas.</p><div id="shopItems" class="shop-grid"></div><div class="profile-section"><b>🎒 Seus itens</b><div id="shopInventory" class="inventory"></div></div></div></section>
 <section id="rankingPanel" class="panel"><div class="game"><div class="gamehead"><b>🏆 Ranking</b><span class="tag">TOP 20</span></div><div id="ranking" class="ranking"></div></div></section>
-<section id="profilePanel" class="panel"><div class="game profile-card"><div class="profile-hero"><div class="avatar" id="profileAvatar">🦊</div><div><h2 id="profileName">Caçador</h2><small>Caçador de Achadinhos</small></div></div><div class="level"><div><b id="profileLevel">NÍVEL 1</b><span id="profileLevelText"> 0 / 500 XP</span></div><div class="profile-progress"><i id="profileProgress"></i></div></div><div class="profile-grid"><div><b id="profileGames">0</b><small>Partidas</small></div><div><b id="profileHits">0</b><small>Acertos</small></div><div><b id="profileBest">0</b><small>Melhor sequência</small></div><div><b id="profileOffers">0</b><small>Ofertas vistas</small></div></div><div class="profile-section"><b>🏅 Conquistas</b><div class="achievements"><div id="ach1" class="achievement">🎯<small>Primeiro acerto</small></div><div id="ach3" class="achievement">🔥<small>Sequência 3</small></div><div id="ach7" class="achievement">⚡<small>Sequência 7</small></div><div id="ach50" class="achievement">🏆<small>50 partidas</small></div></div></div><div class="profile-section"><b>🎒 Inventário</b><div class="inventory"><div>🪙 <span id="invCoins">0</span> moedas</div><div>⭐ <span id="invPoints">0</span> pontos</div></div></div></div></section>
+<section id="profilePanel" class="panel"><div class="game profile-card"><button class="logout-btn" onclick="logout()">SAIR DA CONTA</button><div class="profile-hero"><div class="avatar" id="profileAvatar">🦊</div><div><h2 id="profileName">Caçador</h2><small>Caçador de Achadinhos</small></div></div><div class="level"><div><b id="profileLevel">NÍVEL 1</b><span id="profileLevelText"> 0 / 500 XP</span></div><div class="profile-progress"><i id="profileProgress"></i></div></div><div class="profile-grid"><div><b id="profileGames">0</b><small>Partidas</small></div><div><b id="profileHits">0</b><small>Acertos</small></div><div><b id="profileBest">0</b><small>Melhor sequência</small></div><div><b id="profileOffers">0</b><small>Ofertas vistas</small></div></div><div class="profile-section"><b>🏅 Conquistas</b><div class="achievements"><div id="ach1" class="achievement">🎯<small>Primeiro acerto</small></div><div id="ach3" class="achievement">🔥<small>Sequência 3</small></div><div id="ach7" class="achievement">⚡<small>Sequência 7</small></div><div id="ach50" class="achievement">🏆<small>50 partidas</small></div></div></div><div class="profile-section"><b>🎒 Inventário</b><div class="inventory"><div>🪙 <span id="invCoins">0</span> moedas</div><div>⭐ <span id="invPoints">0</span> pontos</div></div></div></div></section>
 </div>
 
 <nav class="bottom"><div class="nav"><button class="active" data-nav="home">⌂<br>Início</button><button data-nav="modes">🎮<br>Modos</button><button data-nav="ranking">🏆<br>Ranking</button><button data-nav="shop">🛒<br>Loja</button><button data-nav="profile">👤<br>Perfil</button></div></nav>
@@ -232,8 +233,7 @@ const tg=window.Telegram?.WebApp||null;
 if(tg){tg.ready();tg.expand();try{tg.setHeaderColor('#08090d');tg.setBackgroundColor('#08090d')}catch(e){}}
 const api='';
 const telegramUser=tg?.initDataUnsafe?.user;
-const playerId=telegramUser?.id?String(telegramUser.id):'demo';
-const playerName=telegramUser?.first_name||'Caçador';
+let sessionToken=localStorage.getItem('caca_session')||'';let playerId=localStorage.getItem('caca_user_id')||'';let playerName=localStorage.getItem('caca_user_name')||'Caçador';let authMode='login';
 let currentMode='hunt';
 let gameRound=1; const totalRounds=3; let timerId=null;
 
@@ -249,7 +249,10 @@ async function post(url,data){const r=await fetch(api+url,{method:'POST',headers
 function updatePlayer(p){if(!p)return;$('points').textContent=p.pontos||0;$('coins').textContent=p.moedas||0;$('streak').textContent=(p.sequencia||0)+' acertos';$('best').textContent=p.melhor_sequencia||0;updateProfile(p);if(p.bonus_diario?.recebeu)alert('🎁 Bônus diário! +'+p.bonus_diario.moedas+' moedas e +'+p.bonus_diario.pontos+' pontos.');}
 function updateProfile(p){const games=p.partidas||p.jogos||0,hits=p.acertos||0,best=p.melhor_sequencia||0,offers=p.ofertas_vistas||0;const xp=games*10+hits*20;const level=Math.floor(xp/500)+1;const pct=Math.min(100,(xp%500)/5);$('profileName').textContent=playerName;$('profileLevel').textContent='NÍVEL '+level;$('profileLevelText').textContent=' '+(xp%500)+' / 500 XP';$('profileProgress').style.width=pct+'%';$('profileGames').textContent=games;$('profileHits').textContent=hits;$('profileBest').textContent=best;$('profileOffers').textContent=offers;$('invCoins').textContent=p.moedas||0;$('invPoints').textContent=p.pontos||0;$('ach1').classList.toggle('unlocked',hits>=1);$('ach3').classList.toggle('unlocked',best>=3);$('ach7').classList.toggle('unlocked',best>=7);$('ach50').classList.toggle('unlocked',games>=50)}
 
-async function loadPlayer(){try{updatePlayer(await get('/api/player?user_id='+encodeURIComponent(playerId)+'&name='+encodeURIComponent(playerName)))}catch(e){}}
+async function loadPlayer(){if(!sessionToken)return;try{updatePlayer(await get('/api/player?token='+encodeURIComponent(sessionToken)))}catch(e){logout(false)}}
+function showAuth(mode){authMode=mode;$('loginTab').classList.toggle('active',mode==='login');$('registerTab').classList.toggle('active',mode==='register');$('nameField').classList.toggle('hidden',mode!=='register');$('authSubmit').textContent=mode==='login'?'ENTRAR NO JOGO':'CRIAR MINHA CONTA';$('authError').textContent=''}
+async function submitAuth(ev){ev.preventDefault();try{const d=await post(authMode==='login'?'/api/auth/login':'/api/auth/register',authMode==='login'?{email:$('authEmail').value.trim(),senha:$('authPassword').value}:{nome:$('authName').value.trim(),email:$('authEmail').value.trim(),senha:$('authPassword').value});sessionToken=d.token;playerId=d.user.id;playerName=d.user.nome;localStorage.setItem('caca_session',sessionToken);localStorage.setItem('caca_user_id',playerId);localStorage.setItem('caca_user_name',playerName);$('authOverlay').classList.add('hidden');updatePlayer(d.player);setMode('home')}catch(e){$('authError').textContent=e.message}}
+async function logout(show=true){if(sessionToken){try{await post('/api/auth/logout',{token:sessionToken})}catch(e){}}localStorage.removeItem('caca_session');localStorage.removeItem('caca_user_id');localStorage.removeItem('caca_user_name');sessionToken='';playerId='';if(show){$('authOverlay').classList.remove('hidden');showAuth('login')}}
 
 function showReward(ok,points,coins,nextMode){clearInterval(timerId);$('gamePanel').innerHTML='<div class="reward-screen"><div class="reward-icon">'+(ok?'🎉':'💪')+'</div><div class="gamehead" style="justify-content:center"><b>'+(ok?'RECOMPENSA!':'CONTINUE TENTANDO')+'</b></div><div class="reward-value">'+(ok?'+'+points+' ⭐':'0 ⭐')+'</div><div class="reward-sub">'+(ok?'+'+coins+' 🪙 adicionadas ao seu saldo':'A sequência foi reiniciada. Na próxima você pode recuperar!')+'</div><button class="next" onclick="nextRound(\''+nextMode+'\')">'+(gameRound<totalRounds?'PRÓXIMO JOGO →':'NOVA RODADA →')+'</button></div>'}
 function nextRound(mode){gameRound=gameRound>=totalRounds?1:gameRound+1;nextGame(mode)}
@@ -260,13 +263,13 @@ function nextGame(mode){setMode(mode||'hunt');window.scrollTo({top:0,behavior:'s
 
 async function hunt(){
  currentMode='hunt';
- const d=await get('/api/game/hunt?user_id='+encodeURIComponent(playerId)+'&name='+encodeURIComponent(playerName));
+ const d=await get('/api/game/hunt?token='+encodeURIComponent(sessionToken));
  $('gamePanel').innerHTML='<div class="game-screen">'+roundHeader('','100')+'<div class="gamehead"><b>🎁 Caça ao Achadinho</b><span class="tag">+100 ⭐</span></div><div class="question">Uma caixa esconde o achadinho do dia. Qual você abre?</div><div class="boxes">'+d.caixas.map(c=>'<button class="box" onclick="answerHunt('+c.posicao+',\''+c.produto.id+'\',this)"><div class="emoji">📦</div><b>CAIXA '+(c.posicao+1)+'</b></button>').join('')+'</div><div class="hint">Escolha uma caixa. Você só tem uma tentativa.</div></div>'; startTimer();
  window.huntRound=d;
 }
 async function answerHunt(pos,id,el){
  document.querySelectorAll('.box').forEach(x=>x.disabled=true);
- try{const d=await post('/api/game/hunt/answer',{user_id:playerId,name:playerName,rodada_id:window.huntRound.rodada_id,posicao:pos,produto_id:id});updatePlayer(d.player);showReward(d.acertou,d.pontos_ganhos,d.moedas_ganhas,'price');return;/*,'<b>'+(d.acertou?'🎉 ACERTOU!':'😅 QUASE!')+'</b><br>'+(d.acertou?'Você encontrou o achadinho e ganhou 100 pontos.':'O achadinho era <b>'+escapeHtml(d.achadinho.nome)+'</b>.')+'<button class="offer" onclick="showOffer(\''+d.achadinho.id+'\')">🛒 VER OFERTA</button>','price'));*/}catch(e){alert(e.message)}
+ try{const d=await post('/api/game/hunt/answer',{token:sessionToken,rodada_id:window.huntRound.rodada_id,posicao:pos,produto_id:id});updatePlayer(d.player);showReward(d.acertou,d.pontos_ganhos,d.moedas_ganhas,'price');return;/*,'<b>'+(d.acertou?'🎉 ACERTOU!':'😅 QUASE!')+'</b><br>'+(d.acertou?'Você encontrou o achadinho e ganhou 100 pontos.':'O achadinho era <b>'+escapeHtml(d.achadinho.nome)+'</b>.')+'<button class="offer" onclick="showOffer(\''+d.achadinho.id+'\')">🛒 VER OFERTA</button>','price'));*/}catch(e){alert(e.message)}
 }
 async function price(){
  currentMode='price';
@@ -320,10 +323,8 @@ async function buyItem(id){
   await shop();
  }catch(e){alert(e.message)}
 }
-async function ranking(){
- $('ranking').innerHTML='<div class="hint">Carregando...</div>';
- try{const list=await get('/api/ranking');$('ranking').innerHTML=list.length?list.map(r=>'<div class="rank"><div class="rankpos">#'+r.posicao+'</div><div class="rankname">'+escapeHtml(r.nome)+'</div><div class="rankpoints">⭐ '+r.pontos+'</div></div>').join(''):'<div class="hint">Você será o primeiro do ranking. Jogue agora!</div>'}catch(e){$('ranking').innerHTML='<div class="hint">Não foi possível carregar o ranking.</div>'}
-}
+async function ranking(){ $('ranking').innerHTML='<div class="hint">Carregando...</div>'; try{const d=await get('/api/ranking?user_id='+encodeURIComponent(playerId));const me=d.me;const mine=me?'<div class="ranking-me">🏆 <b>Sua posição: #'+me.posicao+'</b> · ⭐ '+me.pontos+' pontos · '+d.total_jogadores+' jogadores</div>':'';const list=d.top||[];$('ranking').innerHTML=mine+list.map(r=>'<div class="rank"><div class="rankpos">#'+r.posicao+'</div><div class="rankname">'+(r.id===playerId?'🦊 ':'')+escapeHtml(r.nome)+'</div><div class="rankpoints">⭐ '+r.pontos+'</div></div>').join('')}catch(e){$('ranking').innerHTML='<div class="hint">Não foi possível carregar o ranking.</div>'}}
+
 function openGameModes(){
  document.querySelectorAll('[data-nav]').forEach(x=>x.classList.toggle('active',x.dataset.nav==='modes'));
  setMode('hunt');
@@ -362,8 +363,7 @@ document.querySelectorAll('[data-nav]').forEach(b=>b.addEventListener('click',()
    loadPlayer();
  }
 }));
-setMode('home');
-loadPlayer();
+if(sessionToken){$('authOverlay').classList.add('hidden');setMode('home');loadPlayer()}else{$('authOverlay').classList.remove('hidden');setMode('home');showAuth('login')}
 </script>
 </body>
 </html>
