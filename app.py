@@ -299,7 +299,9 @@ def offers():
 def player():
     token=request.args.get("token")
     with SESSIONS_LOCK: uid=SESSIONS.get(token)
-    jogador=obter_jogador(uid) if uid else obter_jogador("demo","Caçador")
+    if not uid:
+        return jsonify({"ok":False,"erro":"Sessão do Telegram inválida ou expirada. Abra o jogo novamente pelo Telegram."}),401
+    jogador=obter_jogador(uid)
     bonus=aplicar_bonus_diario(jogador)
     resposta=jogador_publico(jogador); resposta["bonus_diario"]=bonus; resposta["email"]=jogador.get("email","")
     return jsonify(resposta)
