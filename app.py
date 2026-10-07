@@ -85,7 +85,7 @@ def telegram_auth(init_data):
         received=pairs.pop("hash",None)
         if not received: return None
         check="\n".join(f"{k}={pairs[k]}" for k in sorted(pairs))
-        secret=hashlib.sha256(bot_token.encode()).digest()
+        secret=hmac.new(b"WebAppData",bot_token.encode(),hashlib.sha256).digest()
         calc=hmac.new(secret,check.encode(),hashlib.sha256).hexdigest()
         if not secrets.compare_digest(calc,received): return None
         if int(time.time())-int(pairs.get("auth_date","0"))>86400: return None
