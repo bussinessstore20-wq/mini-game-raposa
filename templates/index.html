@@ -230,7 +230,15 @@ body{background:#030a16!important;background-image:radial-gradient(ellipse at 70
 
 <script>
 const tg=window.Telegram?.WebApp||null;
-if(tg){tg.ready();tg.expand();try{tg.setHeaderColor('#08090d');tg.setBackgroundColor('#08090d')}catch(e){}}
+if(tg){
+  tg.ready();
+  tg.expand();
+  try{
+    tg.setHeaderColor('#08090d');
+    tg.setBackgroundColor('#08090d');
+    tg.enableClosingConfirmation();
+  }catch(e){}
+}
 const api='';
 const telegramUser=tg?.initDataUnsafe?.user;
 let sessionToken=localStorage.getItem('caca_session')||'';let playerId=localStorage.getItem('caca_user_id')||'';let playerName=localStorage.getItem('caca_user_name')||'Caçador';let authMode='login';
@@ -257,7 +265,7 @@ async function loginTelegram(){
     sessionToken=d.token;playerId=d.user.id;playerName=d.user.nome;
     localStorage.setItem('caca_session',sessionToken);localStorage.setItem('caca_user_id',playerId);localStorage.setItem('caca_user_name',playerName);
     $('authOverlay').classList.add('hidden');updatePlayer(d.player);setMode('home');
-  }catch(e){$('authError').textContent=e.message}
+  }catch(e){$('authError').textContent=e.message||'Não foi possível entrar pelo Telegram.'}
 }
 async function loadPlayer(){if(!sessionToken)return;try{updatePlayer(await get('/api/player?token='+encodeURIComponent(sessionToken)))}catch(e){logout(false)}}
 async function logout(show=true){if(sessionToken){try{await post('/api/auth/logout',{token:sessionToken})}catch(e){}}localStorage.removeItem('caca_session');localStorage.removeItem('caca_user_id');localStorage.removeItem('caca_user_name');sessionToken='';playerId='';if(show){$('authOverlay').classList.remove('hidden')}}
@@ -289,7 +297,7 @@ async function price(){
 }
 async function answerPrice(v){
  document.querySelectorAll('.option').forEach(x=>x.disabled=true);
- try{const d=await post('/api/game/price/answer',{user_id:playerId,name:playerName,rodada_id:window.priceRound.rodada_id,preco:v});updatePlayer(d.player);showReward(d.acertou,d.pontos_ganhos,d.moedas_ganhas,'duel');return;/*,'<b>'+(d.acertou?'🎯 PREÇO EXATO!':'😅 PASSOU PERTO!')+'</b><br>O preço real era <b>'+money(d.preco_real)+'</b>.<button class="offer" onclick="showOffer(\''+d.produto.id+'\')">🛒 VER OFERTA</button>','duel'));*/}catch(e){alert(e.message)}
+ try{const d=await post('/api/game/price/answer',{token:sessionToken,rodada_id:window.priceRound.rodada_id,preco:v});updatePlayer(d.player);showReward(d.acertou,d.pontos_ganhos,d.moedas_ganhas,'duel');return;/*,'<b>'+(d.acertou?'🎯 PREÇO EXATO!':'😅 PASSOU PERTO!')+'</b><br>O preço real era <b>'+money(d.preco_real)+'</b>.<button class="offer" onclick="showOffer(\''+d.produto.id+'\')">🛒 VER OFERTA</button>','duel'));*/}catch(e){alert(e.message)}
 }
 async function duel(){
  currentMode='duel';
@@ -298,10 +306,10 @@ async function duel(){
  window.duelRound=d;
 }
 async function answerDuel(id){
- try{const d=await post('/api/game/duel/answer',{user_id:playerId,name:playerName,rodada_id:window.duelRound.rodada_id,produto_id:id});updatePlayer(d.player);showReward(true,d.pontos_ganhos,d.moedas_ganhas,'hunt');return;/*,'❤️ Boa escolha! Você ganhou <b>50 pontos</b>.<button class="offer" onclick="showOffer(\''+id+'\')">🛒 VER OFERTA</button>','hunt'));*/}catch(e){alert(e.message)}
+ try{const d=await post('/api/game/duel/answer',{token:sessionToken,rodada_id:window.duelRound.rodada_id,produto_id:id});updatePlayer(d.player);showReward(true,d.pontos_ganhos,d.moedas_ganhas,'hunt');return;/*,'❤️ Boa escolha! Você ganhou <b>50 pontos</b>.<button class="offer" onclick="showOffer(\''+id+'\')">🛒 VER OFERTA</button>','hunt'));*/}catch(e){alert(e.message)}
 }
 async function showOffer(id){
- try{const d=await post('/api/offer/view',{user_id:playerId,name:playerName,produto_id:id});updatePlayer(d.player);if(d.url&&d.url!=='#')window.open(d.url,'_blank');else alert('A oferta será conectada ao produto real na próxima integração.')}catch(e){}
+ try{const d=await post('/api/offer/view',{token:sessionToken,produto_id:id});updatePlayer(d.player);if(d.url&&d.url!=='#')window.open(d.url,'_blank');else alert('A oferta será conectada ao produto real na próxima integração.')}catch(e){}
 }
 async function shop(){
  try{
@@ -324,7 +332,7 @@ function renderInventory(inv){
 }
 async function buyItem(id){
  try{
-  const d=await post('/api/shop/buy',{user_id:playerId,name:playerName,item_id:id});
+  const d=await post('/api/shop/buy',{token:sessionToken,item_id:id});
   updatePlayer(d.player);
   $('shopCoins').textContent=d.player.moedas||0;
   renderInventory(d.player.inventario||{});
@@ -332,7 +340,7 @@ async function buyItem(id){
   await shop();
  }catch(e){alert(e.message)}
 }
-async function ranking(){ $('ranking').innerHTML='<div class="hint">Carregando...</div>'; try{const d=await get('/api/ranking?user_id='+encodeURIComponent(playerId));const me=d.me;const mine=me?'<div class="ranking-me">🏆 <b>Sua posição: #'+me.posicao+'</b> · ⭐ '+me.pontos+' pontos · '+d.total_jogadores+' jogadores</div>':'';const list=d.top||[];$('ranking').innerHTML=mine+list.map(r=>'<div class="rank"><div class="rankpos">#'+r.posicao+'</div><div class="rankname">'+(r.id===playerId?'🦊 ':'')+escapeHtml(r.nome)+'</div><div class="rankpoints">⭐ '+r.pontos+'</div></div>').join('')}catch(e){$('ranking').innerHTML='<div class="hint">Não foi possível carregar o ranking.</div>'}}
+async function ranking(){ $('ranking').innerHTML='<div class="hint">Carregando...</div>'; try{const d=await get('/api/ranking?token='+encodeURIComponent(sessionToken));const me=d.me;const mine=me?'<div class="ranking-me">🏆 <b>Sua posição: #'+me.posicao+'</b> · ⭐ '+me.pontos+' pontos · '+d.total_jogadores+' jogadores</div>':'';const list=d.top||[];$('ranking').innerHTML=mine+list.map(r=>'<div class="rank"><div class="rankpos">#'+r.posicao+'</div><div class="rankname">'+(r.id===playerId?'🦊 ':'')+escapeHtml(r.nome)+'</div><div class="rankpoints">⭐ '+r.pontos+'</div></div>').join('')}catch(e){$('ranking').innerHTML='<div class="hint">Não foi possível carregar o ranking.</div>'}}
 
 function openGameModes(){
  document.querySelectorAll('[data-nav]').forEach(x=>x.classList.toggle('active',x.dataset.nav==='modes'));
@@ -372,7 +380,32 @@ document.querySelectorAll('[data-nav]').forEach(b=>b.addEventListener('click',()
    loadPlayer();
  }
 }));
-if(sessionToken){$('authOverlay').classList.add('hidden');setMode('home');loadPlayer()}else{$('authOverlay').classList.remove('hidden');setMode('home')}
+async function bootstrapTelegram(){
+  $('authOverlay').classList.remove('hidden');
+  setMode('home');
+
+  if(!tg || !tg.initData){
+    $('authError').textContent='Abra este jogo pelo botão do Telegram para entrar.';
+    return;
+  }
+
+  if(sessionToken){
+    try{
+      const p=await get('/api/player?token='+encodeURIComponent(sessionToken));
+      $('authOverlay').classList.add('hidden');
+      updatePlayer(p);
+      setMode('home');
+      return;
+    }catch(e){
+      await logout(false);
+    }
+  }
+
+  // No primeiro acesso, autentica automaticamente usando o initData
+  // entregue pelo Telegram Mini App.
+  await loginTelegram();
+}
+bootstrapTelegram();
 </script>
 </body>
 </html>
