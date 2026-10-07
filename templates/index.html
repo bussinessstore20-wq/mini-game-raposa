@@ -183,7 +183,7 @@ body{background:#030a16!important;background-image:radial-gradient(ellipse at 70
 .auth-overlay{position:fixed;inset:0;background:#08090df5;backdrop-filter:blur(14px);z-index:50;display:grid;place-items:center;padding:18px}.auth-card{width:min(430px,100%);background:linear-gradient(145deg,#171a22,#0f1117);border:1px solid #343946;border-radius:26px;padding:25px;box-shadow:0 25px 80px #0008}.auth-logo{width:68px;height:68px;margin:0 auto 12px;border-radius:21px;background:linear-gradient(145deg,#ff9a3d,#ff6200);display:grid;place-items:center;font-size:38px}.auth-card h1{text-align:center;margin:0;font-size:25px}.auth-sub{text-align:center;color:var(--muted);font-size:12px;line-height:1.5;margin:7px 0 20px}.auth-tabs{display:grid;grid-template-columns:1fr 1fr;background:#0b0d12;border:1px solid var(--line);border-radius:12px;padding:4px;margin-bottom:14px}.auth-tabs button{border:0;background:transparent;color:var(--muted);padding:10px;border-radius:9px;font-weight:800}.auth-tabs button.active{background:#ff7a001b;color:#ff9b4a}.auth-form{display:grid;gap:10px}.auth-form label{font-size:10px;color:#9ca2af;font-weight:800;text-transform:uppercase}.auth-form input{width:100%;background:#0d1016;border:1px solid #303541;border-radius:12px;padding:13px;color:white;outline:none}.auth-submit{border:0;background:linear-gradient(135deg,#ff963f,#ff6100);color:#fff;padding:14px;border-radius:13px;font-weight:900;cursor:pointer}.auth-error{min-height:16px;text-align:center;color:#ff9999;font-size:10px}.auth-foot{text-align:center;color:var(--muted);font-size:10px;margin-top:14px}.ranking-me{margin-bottom:10px;background:#ff7a0012;border:1px solid #ff7a0040;border-radius:14px;padding:12px;font-size:11px}.logout-btn{border:1px solid var(--line);background:#171a22;color:#ff9b4a;border-radius:9px;padding:7px 9px;font-size:9px;cursor:pointer}
 </style>
 </head>
-<body><div id="authOverlay" class="auth-overlay"><div class="auth-card"><div class="auth-logo">🦊</div><h1>Caça aos Achadinhos</h1><div class="auth-sub">Entre para salvar seus pontos e disputar o ranking.</div><div class="auth-tabs"><button id="loginTab" class="active" onclick="showAuth('login')">ENTRAR</button><button id="registerTab" onclick="showAuth('register')">CRIAR CONTA</button></div><form class="auth-form" onsubmit="submitAuth(event)"><div id="nameField" class="hidden"><label>Nome</label><input id="authName" placeholder="Nome no ranking"></div><label>E-mail</label><input id="authEmail" type="email" placeholder="voce@email.com" required><label>Senha</label><input id="authPassword" type="password" minlength="6" placeholder="Mínimo 6 caracteres" required><div id="authError" class="auth-error"></div><button id="authSubmit" class="auth-submit">ENTRAR NO JOGO</button></form><div class="auth-foot">Sua conta salva sua evolução e sua posição.</div></div></div>
+<body><div id="authOverlay" class="auth-overlay"><div class="auth-card"><div class="auth-logo">🦊</div><h1>Caça aos Achadinhos</h1><div class="auth-sub">Entre pelo Telegram para salvar seus pontos e disputar o ranking.</div><button class="auth-submit" onclick="loginTelegram()">✈️ ENTRAR COM TELEGRAM</button><div id="authError" class="auth-error"></div><div class="auth-foot">Sua conta é vinculada automaticamente ao seu Telegram.</div></div></div></div>
 <aside class="desktop-sidebar" aria-label="Navegação principal">
   <div class="sidebar-brand"><div class="sidebar-fox">🦊</div><div><strong>Caça aos<br>Achadinhos</strong><small>Jogue · Encontre · Economize</small></div></div>
   <div class="sidebar-label">Menu principal</div>
@@ -249,10 +249,19 @@ async function post(url,data){const r=await fetch(api+url,{method:'POST',headers
 function updatePlayer(p){if(!p)return;$('points').textContent=p.pontos||0;$('coins').textContent=p.moedas||0;$('streak').textContent=(p.sequencia||0)+' acertos';$('best').textContent=p.melhor_sequencia||0;updateProfile(p);if(p.bonus_diario?.recebeu)alert('🎁 Bônus diário! +'+p.bonus_diario.moedas+' moedas e +'+p.bonus_diario.pontos+' pontos.');}
 function updateProfile(p){const games=p.partidas||p.jogos||0,hits=p.acertos||0,best=p.melhor_sequencia||0,offers=p.ofertas_vistas||0;const xp=games*10+hits*20;const level=Math.floor(xp/500)+1;const pct=Math.min(100,(xp%500)/5);$('profileName').textContent=playerName;$('profileLevel').textContent='NÍVEL '+level;$('profileLevelText').textContent=' '+(xp%500)+' / 500 XP';$('profileProgress').style.width=pct+'%';$('profileGames').textContent=games;$('profileHits').textContent=hits;$('profileBest').textContent=best;$('profileOffers').textContent=offers;$('invCoins').textContent=p.moedas||0;$('invPoints').textContent=p.pontos||0;$('ach1').classList.toggle('unlocked',hits>=1);$('ach3').classList.toggle('unlocked',best>=3);$('ach7').classList.toggle('unlocked',best>=7);$('ach50').classList.toggle('unlocked',games>=50)}
 
+async function loginTelegram(){
+  try{
+    if(!tg || !tg.initData){$('authError').textContent='Abra o jogo pelo botão do Telegram para entrar.';return}
+    $('authError').textContent='Validando Telegram...';
+    const d=await post('/api/auth/telegram',{initData:tg.initData});
+    sessionToken=d.token;playerId=d.user.id;playerName=d.user.nome;
+    localStorage.setItem('caca_session',sessionToken);localStorage.setItem('caca_user_id',playerId);localStorage.setItem('caca_user_name',playerName);
+    $('authOverlay').classList.add('hidden');updatePlayer(d.player);setMode('home');
+  }catch(e){$('authError').textContent=e.message}
+}
 async function loadPlayer(){if(!sessionToken)return;try{updatePlayer(await get('/api/player?token='+encodeURIComponent(sessionToken)))}catch(e){logout(false)}}
-function showAuth(mode){authMode=mode;$('loginTab').classList.toggle('active',mode==='login');$('registerTab').classList.toggle('active',mode==='register');$('nameField').classList.toggle('hidden',mode!=='register');$('authSubmit').textContent=mode==='login'?'ENTRAR NO JOGO':'CRIAR MINHA CONTA';$('authError').textContent=''}
-async function submitAuth(ev){ev.preventDefault();try{const d=await post(authMode==='login'?'/api/auth/login':'/api/auth/register',authMode==='login'?{email:$('authEmail').value.trim(),senha:$('authPassword').value}:{nome:$('authName').value.trim(),email:$('authEmail').value.trim(),senha:$('authPassword').value});sessionToken=d.token;playerId=d.user.id;playerName=d.user.nome;localStorage.setItem('caca_session',sessionToken);localStorage.setItem('caca_user_id',playerId);localStorage.setItem('caca_user_name',playerName);$('authOverlay').classList.add('hidden');updatePlayer(d.player);setMode('home')}catch(e){$('authError').textContent=e.message}}
-async function logout(show=true){if(sessionToken){try{await post('/api/auth/logout',{token:sessionToken})}catch(e){}}localStorage.removeItem('caca_session');localStorage.removeItem('caca_user_id');localStorage.removeItem('caca_user_name');sessionToken='';playerId='';if(show){$('authOverlay').classList.remove('hidden');showAuth('login')}}
+async function logout(show=true){if(sessionToken){try{await post('/api/auth/logout',{token:sessionToken})}catch(e){}}localStorage.removeItem('caca_session');localStorage.removeItem('caca_user_id');localStorage.removeItem('caca_user_name');sessionToken='';playerId='';if(show){$('authOverlay').classList.remove('hidden')}}
+
 
 function showReward(ok,points,coins,nextMode){clearInterval(timerId);$('gamePanel').innerHTML='<div class="reward-screen"><div class="reward-icon">'+(ok?'🎉':'💪')+'</div><div class="gamehead" style="justify-content:center"><b>'+(ok?'RECOMPENSA!':'CONTINUE TENTANDO')+'</b></div><div class="reward-value">'+(ok?'+'+points+' ⭐':'0 ⭐')+'</div><div class="reward-sub">'+(ok?'+'+coins+' 🪙 adicionadas ao seu saldo':'A sequência foi reiniciada. Na próxima você pode recuperar!')+'</div><button class="next" onclick="nextRound(\''+nextMode+'\')">'+(gameRound<totalRounds?'PRÓXIMO JOGO →':'NOVA RODADA →')+'</button></div>'}
 function nextRound(mode){gameRound=gameRound>=totalRounds?1:gameRound+1;nextGame(mode)}
@@ -273,7 +282,7 @@ async function answerHunt(pos,id,el){
 }
 async function price(){
  currentMode='price';
- const d=await get('/api/game/price?user_id='+playerId+'&name='+encodeURIComponent(playerName));
+ const d=await get('/api/game/price?token='+encodeURIComponent(sessionToken));
  const p=d.produto;
  $('gamePanel').innerHTML='<div class="game-screen">'+roundHeader('','150')+'<div class="gamehead"><b>💰 Adivinhe o Preço</b><span class="tag">+150 ⭐</span></div><div class="product"><div class="productvisual">'+p.imagem+'</div><h3>'+escapeHtml(p.nome)+'</h3><div class="meta"><span class="badge">'+(p.plataforma==='shopee'?'🟠 Shopee':'🟡 Mercado Livre')+'</span><span class="badge">'+escapeHtml(p.categoria)+'</span></div></div><div class="question" style="margin-top:13px">Quanto você acha que custa?</div><div class="options">'+d.opcoes.map(v=>'<button class="option" onclick="answerPrice('+v+')">'+money(v)+'</button>').join('')+'</div>';
  window.priceRound=d;
@@ -284,7 +293,7 @@ async function answerPrice(v){
 }
 async function duel(){
  currentMode='duel';
- const d=await get('/api/game/duel?user_id='+playerId+'&name='+encodeURIComponent(playerName));
+ const d=await get('/api/game/duel?token='+encodeURIComponent(sessionToken));
  $('gamePanel').innerHTML='<div class="game-screen">'+roundHeader('','50')+'<div class="gamehead"><b>⚔️ Duelo dos Achadinhos</b><span class="tag">+50 ⭐</span></div><div class="question">Qual desses você compraria?</div><div class="duel">'+d.produtos.map(p=>'<button class="box" onclick="answerDuel(\''+p.id+'\')"><div class="emoji">'+p.imagem+'</div><b>'+escapeHtml(p.nome)+'</b><div style="margin-top:8px;color:#62e69a">'+money(p.preco)+'</div></button>').join('')+'</div></div>'; startTimer();
  window.duelRound=d;
 }
@@ -298,7 +307,7 @@ async function shop(){
  try{
   const [items,p]=await Promise.all([
    get('/api/shop'),
-   get('/api/player?user_id='+encodeURIComponent(playerId)+'&name='+encodeURIComponent(playerName))
+   get('/api/player?token='+encodeURIComponent(sessionToken))
   ]);
   updatePlayer(p);
   $('shopCoins').textContent=p.moedas||0;
@@ -363,7 +372,7 @@ document.querySelectorAll('[data-nav]').forEach(b=>b.addEventListener('click',()
    loadPlayer();
  }
 }));
-if(sessionToken){$('authOverlay').classList.add('hidden');setMode('home');loadPlayer()}else{$('authOverlay').classList.remove('hidden');setMode('home');showAuth('login')}
+if(sessionToken){$('authOverlay').classList.add('hidden');setMode('home');loadPlayer()}else{$('authOverlay').classList.remove('hidden');setMode('home')}
 </script>
 </body>
 </html>
