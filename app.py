@@ -7,6 +7,7 @@ import hashlib
 import secrets
 import json
 import hmac
+import requests
 from datetime import datetime, timezone
 from threading import Lock
 
@@ -29,16 +30,97 @@ RECOMPENSAS = {
     "streak_7": {"pontos": 150, "moedas": 100},
 }
 
-PRODUTOS = [
-    {"id":"shopee-001","plataforma":"shopee","nome":"Fone Bluetooth sem fio","preco":39.90,"preco_anterior":89.90,"imagem":"🎧","categoria":"Eletrônicos","url":"#"},
-    {"id":"ml-001","plataforma":"mercadolivre","nome":"Aspirador portátil USB","preco":49.90,"preco_anterior":99.90,"imagem":"🧹","categoria":"Casa","url":"#"},
-    {"id":"shopee-002","plataforma":"shopee","nome":"Mini projetor portátil","preco":129.90,"preco_anterior":249.90,"imagem":"📽️","categoria":"Eletrônicos","url":"#"},
-    {"id":"ml-002","plataforma":"mercadolivre","nome":"Smartwatch esportivo","preco":79.90,"preco_anterior":159.90,"imagem":"⌚","categoria":"Eletrônicos","url":"#"},
-    {"id":"shopee-003","plataforma":"shopee","nome":"Organizador multiuso","preco":24.90,"preco_anterior":54.90,"imagem":"📦","categoria":"Casa","url":"#"},
-    {"id":"ml-003","plataforma":"mercadolivre","nome":"Air Fryer 4L","preco":299.90,"preco_anterior":449.90,"imagem":"🍟","categoria":"Casa","url":"#"},
-    {"id":"shopee-004","plataforma":"shopee","nome":"Luminária LED de mesa","preco":34.90,"preco_anterior":69.90,"imagem":"💡","categoria":"Casa","url":"#"},
-    {"id":"ml-004","plataforma":"mercadolivre","nome":"Caixa de som Bluetooth","preco":89.90,"preco_anterior":149.90,"imagem":"🔊","categoria":"Eletrônicos","url":"#"},
-]
+SUPABASE_URL = os.environ.get("SUPABASE_URL", "https://tynntdgtfindgoexrovx.supabase.co").rstrip("/")
+SUPABASE_ANON_KEY = os.environ.get("SUPABASE_ANON_KEY", "")
+REAL_PRODUCTS_CACHE = {"at": 0, "items": []}
+REAL_PRODUCTS_LOCK = Lock()
+REAL_PRODUCT_TTL = 60
+
+def _produto_plataforma(link, origem=""):
+    s = str(link or "").lower()
+    if "shopee" in s:
+        return "shopee"
+    if "meli." in s or "mercadolibre" in s or "mercadolivre" in s:
+        return "mercadolivre"
+    origem = str(origem or "").lower()
+    return "shopee" if "shopee" in origem else "mercadolivre" if "mercado" in origem else "oferta"
+
+def carregar_produtos_reais(force=False):
+    agora = time.time()
+    with REAL_PRODUCTS_LOCK:
+        if not force and REAL_PRODUCTS_CACHE["items"] and agora - REAL_PRODUCTS_CACHE["at"] < REAL_PRODUCT_TTL:
+            return REAL_PRODUCTS_CACHE["items"]
+        if not SUPABASE_ANON_KEY:
+            app.logger.error("Produtos reais: SUPABASE_ANON_KEY ausente")
+            return REAL_PRODUCTS_CACHE["items"]
+        try:
+            response = requests.get(
+                f"{SUPABASE_URL}/rest/v1/mini_game_produtos",
+                params={"select":"id,link,product_name,item_id,image_url,fila_origem,bot_id,created_at","order":"created_at.desc","limit":"100"},
+                headers={"apikey":SUPABASE_ANON_KEY,"Authorization":f"Bearer {SUPABASE_ANON_KEY}"},
+                timeout=12,
+            )
+            response.raise_for_status()
+            produtos = []
+            for row in response.json():
+                link = str(row.get("link") or "").strip()
+                nome = str(row.get("product_name") or "").strip()
+                imagem = str(row.get("image_url") or "").strip()
+                if not link or not nome or not imagem:
+                    continue
+                produtos.append({
+                    "id":f"real-{row['id']}",
+                    "source_id":row["id"],
+                    "plataforma":_produto_plataforma(link,row.get("fila_origem")),
+                    "nome":nome,
+                    "preco":0.0,
+                    "preco_anterior":0.0,
+                    "imagem":imagem,
+                    "categoria":"Achadinho real",
+                    "url":link,
+                    "item_id":row.get("item_id") or "",
+                    "created_at":row.get("created_at"),
+                })
+            REAL_PRODUCTS_CACHE["at"] = agora
+            REAL_PRODUCTS_CACHE["items"] = produtos
+            app.logger.info("Produtos reais carregados: %s",len(produtos))
+            return produtos
+        except Exception as exc:
+            app.logger.exception("Produtos reais: falha ao carregar: %s",exc)
+            return REAL_PRODUCTS_CACHE["items"]
+
+def _preco_mercadolivre(produto):
+    if produto.get("preco",0) > 0 or not produto.get("item_id","").startswith("MLB"):
+        return produto.get("preco",0)
+    try:
+        response = requests.get(
+            f"https://api.mercadolibre.com/items/{produto['item_id']}",
+            headers={"Accept":"application/json","User-Agent":"RaposaMiniGame/1.0"},
+            timeout=8,
+        )
+        if response.ok:
+            data=response.json()
+            preco=float(data.get("price") or 0)
+            if preco > 0:
+                produto["preco"]=preco
+                original=float(data.get("original_price") or 0)
+                produto["preco_anterior"]=original if original > preco else 0.0
+                if data.get("permalink"):
+                    produto["url"]=data["permalink"]
+                return preco
+    except Exception as exc:
+        app.logger.warning("Preço ML indisponível para %s: %s",produto.get("item_id"),exc)
+    return 0.0
+
+def produtos_reais_com_preco():
+    validos=[]
+    for produto in carregar_produtos_reais():
+        if _preco_mercadolivre(produto) > 0:
+            validos.append(produto)
+    return validos
+
+PRODUTOS = []
+
 
 
 SHOP_ITEMS = {
@@ -151,10 +233,11 @@ def jogador_publico(jogador):
     return {k:v for k,v in jogador.items() if not k.startswith("_")}
 
 def produto_publico(produto):
-    return {k:v for k,v in produto.items() if k != "url"}
+    return {k:v for k,v in produto.items() if k not in ("url","source_id","item_id","created_at")}
 
 def escolher_produtos(quantidade=3):
-    return random.sample(PRODUTOS, min(quantidade, len(PRODUTOS)))
+    produtos=carregar_produtos_reais()
+    return random.sample(produtos, min(quantidade,len(produtos)))
 
 def aplicar_bonus_diario(jogador):
     dia = hoje()
@@ -197,7 +280,13 @@ def index():
 
 @app.get("/api/health")
 def health():
-    return jsonify({"status":"ok","service":"raposa-mini-game","jogadores":len(jogadores),"produtos":len(PRODUTOS),"timestamp":int(time.time())})
+    produtos=carregar_produtos_reais()
+    return jsonify({"status":"ok","service":"raposa-mini-game","jogadores":len(jogadores),"produtos_reais":len(produtos),"timestamp":int(time.time())})
+
+@app.get("/api/offers")
+def offers():
+    produtos=carregar_produtos_reais()
+    return jsonify({"produtos":[produto_publico(p) for p in produtos[:12]],"total":len(produtos)})
 
 @app.get("/api/player")
 def player():
@@ -282,7 +371,7 @@ def hunt_answer():
         registrar_erro(jogador); bonus = {"pontos":0,"moedas":0,"tipo":None}
     jogador["ultima_partida"] = int(time.time())
     save_player(jogador)
-    alvo = next((p for p in PRODUTOS if p["id"] == rodada["alvo"]), None)
+    alvo = next((p for p in carregar_produtos_reais() if p["id"] == rodada["alvo"]), None)
     base = RECOMPENSAS["hunt"]
     return jsonify({"ok":True,"acertou":acertou,"pontos_ganhos":base["pontos"]+bonus["pontos"] if acertou else 0,"moedas_ganhas":base["moedas"]+bonus["moedas"] if acertou else 0,"bonus_sequencia":bonus,"achadinho":produto_publico(alvo),"player":jogador_publico(jogador)})
 
@@ -290,7 +379,10 @@ def hunt_answer():
 def price_game():
     jogador, erro = require_player()
     if erro: return erro
-    produto = random.choice(PRODUTOS)
+    produtos=produtos_reais_com_preco()
+    if len(produtos)<3:
+        return jsonify({"ok":False,"erro":"Ainda não há 3 produtos reais com preço confirmado para este desafio."}),503
+    produto=random.choice(produtos)
     rodada_id = str(uuid.uuid4())
     jogador["_rodadas"][rodada_id] = {"tipo":"price","produto":produto["id"],"criada":time.time()}
     opcoes = {produto["preco"]}
@@ -308,7 +400,7 @@ def price_answer():
     if not rodada: return jsonify({"ok":False,"erro":"Rodada expirada."}),400
     try: resposta = round(float(dados.get("preco")),2)
     except (TypeError,ValueError): return jsonify({"ok":False,"erro":"Preço inválido."}),400
-    produto = next((p for p in PRODUTOS if p["id"] == rodada["produto"]),None)
+    produto = next((p for p in produtos_reais_com_preco() if p["id"] == rodada["produto"]),None)
     if not produto: return jsonify({"ok":False,"erro":"Produto não encontrado."}),404
     acertou = resposta == round(produto["preco"],2)
     if acertou: bonus = registrar_acerto(jogador, "price")
@@ -341,7 +433,7 @@ def duel_answer():
     jogador["ultima_partida"] = int(time.time())
     save_player(jogador)
     base = RECOMPENSAS["duel"]
-    produto = next((p for p in PRODUTOS if p["id"] == escolhido),None)
+    produto = next((p for p in carregar_produtos_reais() if p["id"] == escolhido),None)
     return jsonify({"ok":True,"pontos_ganhos":base["pontos"]+bonus["pontos"],"moedas_ganhas":base["moedas"]+bonus["moedas"],"bonus_sequencia":bonus,"produto":produto_publico(produto) if produto else None,"player":jogador_publico(jogador)})
 
 @app.post("/api/offer/view")
@@ -349,7 +441,7 @@ def offer_view():
     dados = request.get_json(silent=True) or {}
     jogador, erro = require_player(dados)
     if erro: return erro
-    produto = next((p for p in PRODUTOS if p["id"] == dados.get("produto_id")),None)
+    produto = next((p for p in carregar_produtos_reais() if p["id"] == dados.get("produto_id")),None)
     if not produto: return jsonify({"ok":False,"erro":"Oferta não encontrada."}),404
     # Apenas 5 ofertas recompensadas por dia para evitar farming infinito de moedas.
     dia = hoje()
