@@ -387,11 +387,20 @@ function roundHeader(title,points){return '<div class="roundbar"><b>RODADA '+gam
 function resultBox(ok,text,nextMode){return '<div class="result '+(ok?'good':'bad')+'">'+text+'<button class="next" onclick="nextGame(\''+(nextMode||'hunt')+'\')">PRÓXIMO JOGO →</button></div>'}
 function nextGame(mode){setMode(mode||'hunt');window.scrollTo({top:0,behavior:'smooth'})}
 
+function showGameError(message,mode){
+ clearInterval(timerId);
+ $('gamePanel').innerHTML='<div class="result bad"><b>⚠️ '+escapeHtml(message)+'</b><br><span style="display:block;margin-top:7px">O catálogo real pode estar atualizando. Tente novamente.</span><button class="next" onclick="setMode(\\''+escapeHtml(mode||'hunt')+'\\')">🔄 TENTAR NOVAMENTE</button></div>';
+}
 async function hunt(){
  currentMode='hunt';
- const d=await get('/api/game/hunt?token='+encodeURIComponent(sessionToken));
- $('gamePanel').innerHTML='<div class="game-screen">'+roundHeader('','100')+'<div class="gamehead"><b>🎁 Caça ao Achadinho</b><span class="tag">+100 ⭐</span></div><div class="question">Uma caixa esconde o achadinho do dia. Qual você abre?</div><div class="boxes">'+d.caixas.map(c=>'<button class="box" onclick="answerHunt('+c.posicao+',\''+c.produto.id+'\',this)"><div class="emoji">📦</div><b>CAIXA '+(c.posicao+1)+'</b></button>').join('')+'</div><div class="hint">Escolha uma caixa. Você só tem uma tentativa.</div></div>'; startTimer();
- window.huntRound=d;
+ try{
+  const d=await get('/api/game/hunt?token='+encodeURIComponent(sessionToken));
+  $('gamePanel').innerHTML='<div class="game-screen">'+roundHeader('','100')+'<div class="gamehead"><b>🎁 Caça ao Achadinho</b><span class="tag">+100 ⭐</span></div><div class="question">Uma caixa esconde o achadinho do dia. Qual você abre?</div><div class="boxes">'+d.caixas.map(c=>'<button class="box" onclick="answerHunt('+c.posicao+',\\''+c.produto.id+'\\',this)"><div class="emoji">📦</div><b>CAIXA '+(c.posicao+1)+'</b></button>').join('')+'</div><div class="hint">Escolha uma caixa. Você só tem uma tentativa.</div></div>';
+  window.huntRound=d;
+  startTimer();
+ }catch(e){
+  showGameError(e.message||'Não foi possível iniciar a Caça ao Achadinho.', 'hunt');
+ }
 }
 async function answerHunt(pos,id,el){
  document.querySelectorAll('.box').forEach(x=>x.disabled=true);
@@ -399,10 +408,14 @@ async function answerHunt(pos,id,el){
 }
 async function price(){
  currentMode='price';
- const d=await get('/api/game/price?token='+encodeURIComponent(sessionToken));
- const p=d.produto;
- $('gamePanel').innerHTML='<div class="game-screen">'+roundHeader('','150')+'<div class="gamehead"><b>💰 Adivinhe o Preço</b><span class="tag">+150 ⭐</span></div><div class="product"><div class="productvisual">'+p.imagem+'</div><h3>'+escapeHtml(p.nome)+'</h3><div class="meta"><span class="badge">'+(p.plataforma==='shopee'?'🟠 Shopee':'🟡 Mercado Livre')+'</span><span class="badge">'+escapeHtml(p.categoria)+'</span></div></div><div class="question" style="margin-top:13px">Quanto você acha que custa?</div><div class="options">'+d.opcoes.map(v=>'<button class="option" onclick="answerPrice('+v+')">'+money(v)+'</button>').join('')+'</div>';
- window.priceRound=d;
+ try{
+  const d=await get('/api/game/price?token='+encodeURIComponent(sessionToken));
+  const p=d.produto;
+  $('gamePanel').innerHTML='<div class="game-screen">'+roundHeader('','150')+'<div class="gamehead"><b>💰 Adivinhe o Preço</b><span class="tag">+150 ⭐</span></div><div class="product"><div class="productvisual">'+(p.imagem?.startsWith('http')?'<img src="'+escapeHtml(p.imagem)+'" style="width:100%;height:100%;object-fit:contain;border-radius:12px" alt="">':escapeHtml(p.imagem||'🛍️'))+'</div><h3>'+escapeHtml(p.nome)+'</h3><div class="meta"><span class="badge">'+(p.plataforma==='shopee'?'🟠 Shopee':'🟡 Mercado Livre')+'</span><span class="badge">'+escapeHtml(p.categoria)+'</span></div></div><div class="question" style="margin-top:13px">Quanto você acha que custa?</div><div class="options">'+d.opcoes.map(v=>'<button class="option" onclick="answerPrice('+v+')">'+money(v)+'</button>').join('')+'</div>';
+  window.priceRound=d;
+ }catch(e){
+  showGameError(e.message||'Não foi possível iniciar o desafio de preço.', 'price');
+ }
 }
 async function answerPrice(v){
  document.querySelectorAll('.option').forEach(x=>x.disabled=true);
@@ -410,13 +423,35 @@ async function answerPrice(v){
 }
 async function duel(){
  currentMode='duel';
- const d=await get('/api/game/duel?token='+encodeURIComponent(sessionToken));
- $('gamePanel').innerHTML='<div class="game-screen">'+roundHeader('','50')+'<div class="gamehead"><b>⚔️ Duelo dos Achadinhos</b><span class="tag">+50 ⭐</span></div><div class="question">Qual desses você compraria?</div><div class="duel">'+d.produtos.map(p=>'<button class="box" onclick="answerDuel(\''+p.id+'\')"><div class="emoji">'+p.imagem+'</div><b>'+escapeHtml(p.nome)+'</b><div style="margin-top:8px;color:#62e69a">'+money(p.preco)+'</div></button>').join('')+'</div></div>'; startTimer();
- window.duelRound=d;
+ try{
+  const d=await get('/api/game/duel?token='+encodeURIComponent(sessionToken));
+  $('gamePanel').innerHTML='<div class="game-screen">'+roundHeader('','50')+'<div class="gamehead"><b>⚔️ Duelo dos Achadinhos</b><span class="tag">+50 ⭐</span></div><div class="question">Qual desses você compraria?</div><div class="duel">'+d.produtos.map(p=>'<button class="box" onclick="answerDuel(\\''+p.id+'\\')"><div class="emoji">'+(p.imagem?.startsWith('http')?'<img src="'+escapeHtml(p.imagem)+'" style="width:90px;height:90px;object-fit:contain;border-radius:10px" alt="">':escapeHtml(p.imagem||'🛍️'))+'</div><b>'+escapeHtml(p.nome)+'</b><div style="margin-top:8px;color:#62e69a">'+money(p.preco)+'</div></button>').join('')+'</div></div>';
+  window.duelRound=d;
+  startTimer();
+ }catch(e){
+  showGameError(e.message||'Não foi possível iniciar o Duelo.', 'duel');
+ }
 }
 async function answerDuel(id){
  try{const d=await post('/api/game/duel/answer',{token:sessionToken,rodada_id:window.duelRound.rodada_id,produto_id:id});updatePlayer(d.player);showReward(true,d.pontos_ganhos,d.moedas_ganhas,'hunt');return;/*,'❤️ Boa escolha! Você ganhou <b>50 pontos</b>.<button class="offer" onclick="showOffer(\''+id+'\')">🛒 VER OFERTA</button>','hunt'));*/}catch(e){alert(e.message)}
 }
+function openRealOffer(id,url){
+ if(!url || url==='#'){
+   alert('Link da oferta indisponível no momento.');
+   return;
+ }
+ if(sessionToken){
+   post('/api/offer/view',{token:sessionToken,produto_id:id}).catch(()=>{});
+ }
+ try{
+   if(tg && typeof tg.openLink==='function'){
+     tg.openLink(url);
+     return;
+   }
+ }catch(e){}
+ window.location.href=url;
+}
+
 async function loadRealOffers(){
   const grid=document.querySelector('.featured-products');
   if(!grid) return;
@@ -436,7 +471,7 @@ async function loadRealOffers(){
         '<div class="featured-info"><span class="featured-category">ACHADINHO REAL</span>'+
         '<h3>'+escapeHtml(p.nome)+'</h3>'+
         '<div class="featured-prices"><b>'+price+'</b></div>'+
-        '<button class="offer" onclick="showOffer(\''+escapeHtml(p.id)+'\')">🛒 VER OFERTA</button>'+
+        '<button class="offer" onclick="openRealOffer(\''+escapeHtml(p.id)+'\',\''+escapeHtml(p.url||'')+'\')">🛒 VER OFERTA</button>'+
         '</div></article>';
     }).join('');
   }catch(e){
@@ -444,9 +479,7 @@ async function loadRealOffers(){
   }
 }
 
-async function showOffer(id){
- try{const d=await post('/api/offer/view',{token:sessionToken,produto_id:id});updatePlayer(d.player);if(d.url&&d.url!=='#')window.open(d.url,'_blank');else alert('A oferta será conectada ao produto real na próxima integração.')}catch(e){}
-}
+async function showOffer(id){ openRealOffer(id,''); }
 async function shop(){
  try{
   const [items,p]=await Promise.all([
