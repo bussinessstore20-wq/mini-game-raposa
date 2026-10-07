@@ -284,6 +284,13 @@ body{background:#030a16!important;background-image:radial-gradient(ellipse at 70
   .nav button{color:#7c899c!important}.nav button.active{color:#e77918!important;background:#fff4e9!important}
 }
 </style>
+
+<style>
+.real-product .real-art{height:150px;display:flex;align-items:center;justify-content:center;overflow:hidden;background:#f7f8fa!important}
+.real-product .real-art img{width:100%;height:100%;object-fit:contain;display:block}
+.real-product .featured-info h3{display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+.real-product .offer{margin-top:10px}
+</style>
 </head>
 <body><div id="authOverlay" class="auth-overlay"><div class="auth-card"><div class="auth-logo">🦊</div><h1>Caça aos Achadinhos</h1><div class="auth-sub">Entre pelo Telegram para salvar seus pontos e disputar o ranking.</div><button class="auth-submit" onclick="loginTelegram()">✈️ ENTRAR COM TELEGRAM</button><div id="authError" class="auth-error"></div><div class="auth-foot">Sua conta é vinculada automaticamente ao seu Telegram.</div></div></div></div>
 <aside class="desktop-sidebar" aria-label="Navegação principal">
@@ -410,6 +417,33 @@ async function duel(){
 async function answerDuel(id){
  try{const d=await post('/api/game/duel/answer',{token:sessionToken,rodada_id:window.duelRound.rodada_id,produto_id:id});updatePlayer(d.player);showReward(true,d.pontos_ganhos,d.moedas_ganhas,'hunt');return;/*,'❤️ Boa escolha! Você ganhou <b>50 pontos</b>.<button class="offer" onclick="showOffer(\''+id+'\')">🛒 VER OFERTA</button>','hunt'));*/}catch(e){alert(e.message)}
 }
+async function loadRealOffers(){
+  const grid=document.querySelector('.featured-products');
+  if(!grid) return;
+  try{
+    const d=await get('/api/offers');
+    const items=(d.produtos||[]).slice(0,6);
+    if(!items.length){
+      grid.innerHTML='<div class="hint">Nenhum achadinho real disponível no momento.</div>';
+      return;
+    }
+    grid.innerHTML=items.map(p=>{
+      const market=p.plataforma==='shopee'?'🟠 SHOPEE':p.plataforma==='mercadolivre'?'🟡 MERCADO LIVRE':'🛍️ OFERTA';
+      const price=p.preco>0?money(p.preco):'Ver preço';
+      return '<article class="featured-product real-product">'+
+        '<div class="featured-top"><span class="platform">'+market+'</span></div>'+
+        '<div class="featured-art real-art"><img src="'+escapeHtml(p.imagem||'')+'" alt="" loading="lazy"></div>'+
+        '<div class="featured-info"><span class="featured-category">ACHADINHO REAL</span>'+
+        '<h3>'+escapeHtml(p.nome)+'</h3>'+
+        '<div class="featured-prices"><b>'+price+'</b></div>'+
+        '<button class="offer" onclick="showOffer(\''+escapeHtml(p.id)+'\')">🛒 VER OFERTA</button>'+
+        '</div></article>';
+    }).join('');
+  }catch(e){
+    grid.innerHTML='<div class="hint">Não foi possível carregar os achadinhos reais.</div>';
+  }
+}
+
 async function showOffer(id){
  try{const d=await post('/api/offer/view',{token:sessionToken,produto_id:id});updatePlayer(d.player);if(d.url&&d.url!=='#')window.open(d.url,'_blank');else alert('A oferta será conectada ao produto real na próxima integração.')}catch(e){}
 }
@@ -497,6 +531,7 @@ async function bootstrapTelegram(){
       $('authOverlay').classList.add('hidden');
       updatePlayer(p);
       setMode('home');
+      loadRealOffers();
       return;
     }catch(e){
       await logout(false);
@@ -506,6 +541,7 @@ async function bootstrapTelegram(){
   // No primeiro acesso, autentica automaticamente usando o initData
   // entregue pelo Telegram Mini App.
   await loginTelegram();
+  loadRealOffers();
 }
 bootstrapTelegram();
 </script>
