@@ -56,7 +56,9 @@ def db():
 
 def init_db():
     conn = db()
-    conn.execute("CREATE TABLE IF NOT EXISTS users (id TEXT PRIMARY KEY, nome TEXT NOT NULL, email TEXT UNIQUE NOT NULL, password_hash TEXT NOT NULL, created_at TEXT NOT NULL)")
+    conn.execute("CREATE TABLE IF NOT EXISTS users (id TEXT PRIMARY KEY, nome TEXT NOT NULL, email TEXT UNIQUE NOT NULL, password_hash TEXT NOT NULL, created_at TEXT NOT NULL, stats_json TEXT NOT NULL DEFAULT '{}')")
+    try: conn.execute("ALTER TABLE users ADD COLUMN stats_json TEXT NOT NULL DEFAULT '{}'")
+    except sqlite3.OperationalError: pass
     conn.commit()
     conn.close()
 
@@ -74,15 +76,11 @@ def verify_password(password, stored):
         return False
 
 def save_player(jogador):
-    if str(jogador.get("id")) == "demo" or not jogador.get("email"):
-        return
+    if str(jogador.get("id")) == "demo" or not jogador.get("email"): return
+    stats={k:v for k,v in jogador.items() if not k.startswith("_") and k not in ("id","nome","email")}
     conn=db()
-    conn.execute("UPDATE users SET nome=? WHERE id=?", (jogador["nome"],str(jogador["id"])))
-    conn.commit()
-    conn.close()
-
-init_db()
-
+    conn.execute("UPDATE users SET nome=?, stats_json=? WHERE id=?",(jogador["nome"],json.dumps(stats),str(jogador["id"])))
+    conn.commit(); conn.close()
 def hoje():
     return datetime.now(timezone.utc).strftime("%Y-%m-%d")
 
@@ -188,6 +186,9 @@ def login():
     conn=db(); row=conn.execute("SELECT * FROM users WHERE email=?",(email,)).fetchone(); conn.close()
     if not row or not verify_password(senha,row["password_hash"]): return jsonify({"ok":False,"erro":"E-mail ou senha incorretos."}),401
     jogador=jogadores.get(row["id"]) or novo_jogador(row["id"],row["nome"])
+    try:
+        jogador.update(json.loads(row["stats_json"] or "{}"))
+    except Exception: pass
     jogador["nome"]=row["nome"]; jogador["email"]=row["email"]; jogador["_password_hash"]=row["password_hash"]; jogadores[row["id"]]=jogador
     token=secrets.token_urlsafe(32)
     with SESSIONS_LOCK: SESSIONS[token]=row["id"]
@@ -338,3 +339,7 @@ def ranking():
     top=rows[:20]
     if me and not any(x["id"]==me["id"] for x in top): top.append(me)
     return jsonify({"top":top,"total_jogadores":len(rows),"me":me})
+
+
+if __name__ == "__main__":
+    app.run(host="0.0.0.0", port=PORT)
