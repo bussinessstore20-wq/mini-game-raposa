@@ -389,13 +389,13 @@ function nextGame(mode){setMode(mode||'hunt');window.scrollTo({top:0,behavior:'s
 
 function showGameError(message,mode){
  clearInterval(timerId);
- $('gamePanel').innerHTML='<div class="result bad"><b>⚠️ '+escapeHtml(message)+'</b><br><span style="display:block;margin-top:7px">O catálogo real pode estar atualizando. Tente novamente.</span><button class="next" onclick="setMode(\\''+escapeHtml(mode||'hunt')+'\\')">🔄 TENTAR NOVAMENTE</button></div>';
+ $('gamePanel').innerHTML='<div class="result bad"><b>⚠️ '+escapeHtml(message)+'</b><br><span style="display:block;margin-top:7px">O catálogo real pode estar atualizando. Tente novamente.</span><button class="next" onclick="setMode(\''+escapeHtml(mode||'hunt')+'\')">🔄 TENTAR NOVAMENTE</button></div>';
 }
 async function hunt(){
  currentMode='hunt';
  try{
   const d=await get('/api/game/hunt?token='+encodeURIComponent(sessionToken));
-  $('gamePanel').innerHTML='<div class="game-screen">'+roundHeader('','100')+'<div class="gamehead"><b>🎁 Caça ao Achadinho</b><span class="tag">+100 ⭐</span></div><div class="question">Uma caixa esconde o achadinho do dia. Qual você abre?</div><div class="boxes">'+d.caixas.map(c=>'<button class="box" onclick="answerHunt('+c.posicao+',\\''+c.produto.id+'\\',this)"><div class="emoji">📦</div><b>CAIXA '+(c.posicao+1)+'</b></button>').join('')+'</div><div class="hint">Escolha uma caixa. Você só tem uma tentativa.</div></div>';
+  $('gamePanel').innerHTML='<div class="game-screen">'+roundHeader('','100')+'<div class="gamehead"><b>🎁 Caça ao Achadinho</b><span class="tag">+100 ⭐</span></div><div class="question">Uma caixa esconde o achadinho do dia. Qual você abre?</div><div class="boxes">'+d.caixas.map(c=>'<button class="box" onclick="answerHunt('+c.posicao+',\''+c.produto.id+'\',this)"><div class="emoji">📦</div><b>CAIXA '+(c.posicao+1)+'</b></button>').join('')+'</div><div class="hint">Escolha uma caixa. Você só tem uma tentativa.</div></div>';
   window.huntRound=d;
   startTimer();
  }catch(e){
@@ -425,7 +425,7 @@ async function duel(){
  currentMode='duel';
  try{
   const d=await get('/api/game/duel?token='+encodeURIComponent(sessionToken));
-  $('gamePanel').innerHTML='<div class="game-screen">'+roundHeader('','50')+'<div class="gamehead"><b>⚔️ Duelo dos Achadinhos</b><span class="tag">+50 ⭐</span></div><div class="question">Qual desses você compraria?</div><div class="duel">'+d.produtos.map(p=>'<button class="box" onclick="answerDuel(\\''+p.id+'\\')"><div class="emoji">'+(p.imagem?.startsWith('http')?'<img src="'+escapeHtml(p.imagem)+'" style="width:90px;height:90px;object-fit:contain;border-radius:10px" alt="">':escapeHtml(p.imagem||'🛍️'))+'</div><b>'+escapeHtml(p.nome)+'</b><div style="margin-top:8px;color:#62e69a">'+money(p.preco)+'</div></button>').join('')+'</div></div>';
+  $('gamePanel').innerHTML='<div class="game-screen">'+roundHeader('','50')+'<div class="gamehead"><b>⚔️ Duelo dos Achadinhos</b><span class="tag">+50 ⭐</span></div><div class="question">Qual desses você compraria?</div><div class="duel">'+d.produtos.map(p=>'<button class="box" onclick="answerDuel(\''+p.id+'\')"><div class="emoji">'+(p.imagem?.startsWith('http')?'<img src="'+escapeHtml(p.imagem)+'" style="width:90px;height:90px;object-fit:contain;border-radius:10px" alt="">':escapeHtml(p.imagem||'🛍️'))+'</div><b>'+escapeHtml(p.nome)+'</b><div style="margin-top:8px;color:#62e69a">'+money(p.preco)+'</div></button>').join('')+'</div></div>';
   window.duelRound=d;
   startTimer();
  }catch(e){
