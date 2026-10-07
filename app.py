@@ -72,6 +72,9 @@ def init_db():
     conn.commit()
     conn.close()
 
+# Garante que a base do Mini App exista antes de qualquer autenticação.
+init_db()
+
 def telegram_auth(init_data):
     bot_token=os.environ.get("TELEGRAM_BOT_TOKEN") or os.environ.get("BOT_TOKEN")
     if not bot_token or not init_data:
@@ -91,32 +94,17 @@ def telegram_auth(init_data):
         return None
 
 def save_player(jogador):
-    if str(jogador.get("id")) == "demo": return
+    if str(jogador.get("id")) == "demo" or not str(jogador.get("id","")).startswith("tg_"): return
     stats={k:v for k,v in jogador.items() if not k.startswith("_") and k not in ("id","nome","email")}
     conn=db()
     conn.execute("UPDATE telegram_users SET nome=?, stats_json=? WHERE id=?",(jogador["nome"],json.dumps(stats),str(jogador["id"])))
     conn.commit()
     conn.close()
 
-def hash_password(password):
-    salt = secrets.token_bytes(16)
-    digest = hashlib.pbkdf2_hmac("sha256", password.encode(), salt, 120000)
-    return salt.hex() + ":" + digest.hex()
+def init_legacy_auth_helpers_removed():
+    # O jogo usa exclusivamente autenticação pelo Telegram WebApp.
+    return None
 
-def verify_password(password, stored):
-    try:
-        salt, digest = stored.split(":",1)
-        check = hashlib.pbkdf2_hmac("sha256", password.encode(), bytes.fromhex(salt), 120000)
-        return secrets.compare_digest(check.hex(), digest)
-    except Exception:
-        return False
-
-def save_player(jogador):
-    if str(jogador.get("id")) == "demo" or not jogador.get("email"): return
-    stats={k:v for k,v in jogador.items() if not k.startswith("_") and k not in ("id","nome","email")}
-    conn=db()
-    conn.execute("UPDATE users SET nome=?, stats_json=? WHERE id=?",(jogador["nome"],json.dumps(stats),str(jogador["id"])))
-    conn.commit(); conn.close()
 def hoje():
     return datetime.now(timezone.utc).strftime("%Y-%m-%d")
 
@@ -237,14 +225,22 @@ def logout():
 def jogador_da_requisicao(dados=None):
     dados=dados or {}
     token=dados.get("token") or request.args.get("token")
-    with SESSIONS_LOCK: uid=SESSIONS.get(token)
-    if uid:
-        return obter_jogador(uid)
-    return obter_jogador("demo","Caçador")
+    with SESSIONS_LOCK:
+        uid=SESSIONS.get(token)
+    if not uid:
+        return None
+    return obter_jogador(uid)
+
+def require_player(dados=None):
+    jogador = jogador_da_requisicao(dados)
+    if not jogador:
+        return None, (jsonify({"ok":False,"erro":"Sessão do Telegram inválida ou expirada. Abra o jogo novamente pelo Telegram."}), 401)
+    return jogador, None
 
 @app.get("/api/game/hunt")
 def hunt():
-    jogador = obter_jogador(request.args.get("user_id","demo"), request.args.get("name","Caçador"))
+    jogador, erro = require_player()
+    if erro: return erro
     produtos = escolher_produtos(3)
     alvo = random.choice(produtos)
     rodada_id = str(uuid.uuid4())
@@ -254,7 +250,8 @@ def hunt():
 @app.post("/api/game/hunt/answer")
 def hunt_answer():
     dados = request.get_json(silent=True) or {}
-    jogador = obter_jogador(dados.get("user_id","demo"), dados.get("name","Caçador"))
+    jogador, erro = require_player(dados)
+    if erro: return erro
     rodada = jogador["_rodadas"].pop(dados.get("rodada_id"), None)
     if not rodada: return jsonify({"ok":False,"erro":"Rodada expirada."}),400
     acertou = dados.get("produto_id") == rodada["alvo"]
@@ -270,7 +267,8 @@ def hunt_answer():
 
 @app.get("/api/game/price")
 def price_game():
-    jogador = obter_jogador(request.args.get("user_id","demo"), request.args.get("name","Caçador"))
+    jogador, erro = require_player()
+    if erro: return erro
     produto = random.choice(PRODUTOS)
     rodada_id = str(uuid.uuid4())
     jogador["_rodadas"][rodada_id] = {"tipo":"price","produto":produto["id"],"criada":time.time()}
@@ -283,7 +281,8 @@ def price_game():
 @app.post("/api/game/price/answer")
 def price_answer():
     dados = request.get_json(silent=True) or {}
-    jogador = obter_jogador(dados.get("user_id","demo"), dados.get("name","Caçador"))
+    jogador, erro = require_player(dados)
+    if erro: return erro
     rodada = jogador["_rodadas"].pop(dados.get("rodada_id"), None)
     if not rodada: return jsonify({"ok":False,"erro":"Rodada expirada."}),400
     try: resposta = round(float(dados.get("preco")),2)
@@ -302,14 +301,16 @@ def price_answer():
 def duel():
     produtos = escolher_produtos(2)
     rodada_id = str(uuid.uuid4())
-    jogador = obter_jogador(request.args.get("user_id","demo"), request.args.get("name","Caçador"))
+    jogador, erro = require_player()
+    if erro: return erro
     jogador["_rodadas"][rodada_id] = {"tipo":"duel","produtos":[p["id"] for p in produtos],"criada":time.time()}
     return jsonify({"rodada_id":rodada_id,"produtos":[produto_publico(p) for p in produtos]})
 
 @app.post("/api/game/duel/answer")
 def duel_answer():
     dados = request.get_json(silent=True) or {}
-    jogador = obter_jogador(dados.get("user_id","demo"), dados.get("name","Caçador"))
+    jogador, erro = require_player(dados)
+    if erro: return erro
     rodada = jogador["_rodadas"].pop(dados.get("rodada_id"), None)
     if not rodada: return jsonify({"ok":False,"erro":"Rodada expirada."}),400
     escolhido = dados.get("produto_id")
@@ -325,7 +326,8 @@ def duel_answer():
 @app.post("/api/offer/view")
 def offer_view():
     dados = request.get_json(silent=True) or {}
-    jogador = obter_jogador(dados.get("user_id","demo"), dados.get("name","Caçador"))
+    jogador, erro = require_player(dados)
+    if erro: return erro
     produto = next((p for p in PRODUTOS if p["id"] == dados.get("produto_id")),None)
     if not produto: return jsonify({"ok":False,"erro":"Oferta não encontrada."}),404
     # Apenas 5 ofertas recompensadas por dia para evitar farming infinito de moedas.
@@ -347,13 +349,15 @@ def shop():
 
 @app.get("/api/inventory")
 def inventory():
-    jogador = obter_jogador(request.args.get("user_id","demo"), request.args.get("name","Caçador"))
+    jogador, erro = require_player()
+    if erro: return erro
     return jsonify({"moedas": jogador["moedas"], "inventario": jogador.get("inventario", {})})
 
 @app.post("/api/shop/buy")
 def shop_buy():
     dados = request.get_json(silent=True) or {}
-    jogador = obter_jogador(dados.get("user_id","demo"), dados.get("name","Caçador"))
+    jogador, erro = require_player(dados)
+    if erro: return erro
     item = SHOP_ITEMS.get(dados.get("item_id"))
     if not item: return jsonify({"ok":False,"erro":"Item não encontrado."}),404
     with jogadores_lock:
@@ -375,7 +379,8 @@ def shop_buy():
 @app.get("/api/ranking")
 def ranking():
     with jogadores_lock: lista=sorted(jogadores.values(),key=lambda p:(p["pontos"],p["acertos"]),reverse=True)
-    atual=request.args.get("user_id")
+    token=request.args.get("token")
+    with SESSIONS_LOCK: atual=SESSIONS.get(token)
     rows=[{"posicao":i+1,"nome":p["nome"],"pontos":p["pontos"],"moedas":p["moedas"],"sequencia":p["sequencia"],"id":p["id"]} for i,p in enumerate(lista)]
     me=next((x for x in rows if str(x["id"])==str(atual)),None)
     top=rows[:20]
@@ -383,5 +388,6 @@ def ranking():
     return jsonify({"top":top,"total_jogadores":len(rows),"me":me})
 
 
+# # Mini App Telegram preparado
 if __name__ == "__main__":
     app.run(host="0.0.0.0", port=PORT)
