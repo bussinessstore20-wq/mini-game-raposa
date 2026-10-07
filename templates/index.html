@@ -204,7 +204,7 @@ body{background:#030a16!important;background-image:radial-gradient(ellipse at 70
 <div class="streak">🔥 Sequência: <b id="streak">0 dias</b> · Melhor: <b id="best">0</b></div>
 </section>
 
-<section class="discovery-grid"><article class="discovery-card offers-card"><div class="discovery-icon">🛍️</div><div><span class="discovery-eyebrow">VITRINE DE OFERTAS</span><h3>Achadinhos em destaque</h3><p>Descubra produtos da Shopee e do Mercado Livre enquanto joga.</p></div><div class="market-tags"><span>🟠 SHOPEE</span><span>🟡 MERCADO LIVRE</span></div></article><article class="discovery-card missions-card"><div class="discovery-icon">🎯</div><div><span class="discovery-eyebrow">DESAFIOS DIÁRIOS</span><h3>Missões e recompensas</h3><p>Jogue rodadas, acerte desafios e aumente seu saldo de moedas.</p></div><button class="mission-cta" onclick="setMode('hunt')">COMEÇAR MISSÃO <span>→</span></button></article></section>
+<section class="discovery-grid"><article class="discovery-card offers-card"><div class="discovery-icon">🛍️</div><div><span class="discovery-eyebrow">VITRINE DE OFERTAS</span><h3>Achadinhos em destaque</h3><p>Descubra produtos da Shopee e do Mercado Livre enquanto joga.</p></div><div class="market-tags"><span>🟠 SHOPEE</span><span>🟡 MERCADO LIVRE</span></div></article><article class="discovery-card missions-card"><div class="discovery-icon">🎯</div><div><span class="discovery-eyebrow">DESAFIOS DIÁRIOS</span><h3>Missões e recompensas</h3><p>Jogue rodadas, acerte desafios e aumente seu saldo de moedas.</p></div><button class="mission-cta" onclick="openGameModes()">COMEÇAR MISSÃO <span>→</span></button></article></section>
 <section class="featured-section"><div class="section-heading"><div><small>SELEÇÃO DO DIA</small><h2>Ofertas em destaque <span class="live-dot"></span></h2></div><span>DEMO VISUAL</span></div><div class="featured-products">
 <article class="featured-product"><div class="featured-top"><span class="platform shopee">🟠 SHOPEE</span><span class="discount">-42%</span></div><div class="featured-art art-orange">🎧</div><div class="featured-info"><span class="featured-category">ELETRÔNICOS</span><h3>Fone Bluetooth sem fio</h3><div class="featured-prices"><b>R$ 49,90</b><del>R$ 86,90</del></div><div class="featured-footer"><span>⭐ 4,8 <small>· oferta exemplo</small></span><button onclick="demoOffer('Fone Bluetooth sem fio')">VER OFERTA ↗</button></div></div></article>
 <article class="featured-product"><div class="featured-top"><span class="platform mercado">🟡 MERCADO LIVRE</span><span class="discount">-35%</span></div><div class="featured-art art-blue">⌚</div><div class="featured-info"><span class="featured-category">ACESSÓRIOS</span><h3>Relógio inteligente</h3><div class="featured-prices"><b>R$ 89,90</b><del>R$ 139,90</del></div><div class="featured-footer"><span>⭐ 4,7 <small>· oferta exemplo</small></span><button onclick="demoOffer('Relógio inteligente')">VER OFERTA ↗</button></div></div></article>
@@ -323,6 +323,12 @@ async function buyItem(id){
 async function ranking(){
  $('ranking').innerHTML='<div class="hint">Carregando...</div>';
  try{const list=await get('/api/ranking');$('ranking').innerHTML=list.length?list.map(r=>'<div class="rank"><div class="rankpos">#'+r.posicao+'</div><div class="rankname">'+escapeHtml(r.nome)+'</div><div class="rankpoints">⭐ '+r.pontos+'</div></div>').join(''):'<div class="hint">Você será o primeiro do ranking. Jogue agora!</div>'}catch(e){$('ranking').innerHTML='<div class="hint">Não foi possível carregar o ranking.</div>'}
+}
+function openGameModes(){
+ document.querySelectorAll('[data-nav]').forEach(x=>x.classList.toggle('active',x.dataset.nav==='modes'));
+ setMode('hunt');
+ const panel=$('modesPanel');
+ if(panel) panel.scrollIntoView({behavior:'smooth',block:'start'});
 }
 function setMode(mode){
  currentMode=mode;
