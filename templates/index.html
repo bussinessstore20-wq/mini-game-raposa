@@ -62,6 +62,8 @@ body{background:radial-gradient(ellipse at 68% -15%,#ff6b221f,transparent 32%),r
 .level span,.profile-grid small,.achievement small{color:#8e9bb1}.profile-progress{background:#263247}.profile-progress i{background:linear-gradient(90deg,#ff6b22,#ffc247)}
 .achievement.unlocked{border-color:#b75f32;background:#281c20}.hint{color:#91a0b6}.profile-section{border-color:#26354b}
 .desktop-sidebar~.app{min-height:100vh}
+.modes-page-heading{margin-top:2px}
+#modesPanel>.modes{margin-bottom:20px}
 @media(min-width:900px){.bottom{display:none}.app{padding-bottom:35px}.game-home{display:block}.hero{min-height:225px}.hero:after{right:11%;font-size:185px}.game{padding:24px}.shop-grid{grid-template-columns:repeat(2,minmax(0,1fr))}.ranking{grid-template-columns:repeat(2,minmax(0,1fr))}}
 @media(max-width:899px){.desktop-sidebar{display:none}.app{max-width:600px;margin:auto;padding:15px 13px 105px}.top{padding-bottom:13px;margin-bottom:15px}.hero{min-height:190px;padding:23px 20px}.hero h1{max-width:260px;font-size:29px;letter-spacing:-1px}.hero p{max-width:250px;font-size:12px}.hero:after{right:-4px;bottom:-10px;font-size:115px}.modes{gap:8px}.mode{padding:13px 11px;min-height:94px}.mode strong{font-size:11px}.mode small{font-size:9px}.game{padding:15px}.box{min-height:135px}}
 @media(max-width:390px){.app{padding-left:10px;padding-right:10px}.brand b{font-size:13px}.fox{width:37px;height:37px}.stats{gap:4px}.pill{padding:8px}.hero h1{font-size:25px;max-width:230px}.hero:after{font-size:94px}.mode{padding:11px 9px}.mode strong{font-size:10px}.box{min-height:125px;padding:7px}}
@@ -185,8 +187,8 @@ body{background:#030a16!important;background-image:radial-gradient(ellipse at 70
   <div class="sidebar-brand"><div class="sidebar-fox">🦊</div><div><strong>Caça aos<br>Achadinhos</strong><small>Jogue · Encontre · Economize</small></div></div>
   <div class="sidebar-label">Menu principal</div>
   <div class="sidebar-links">
-    <button class="active" data-nav="game"><span>⌂</span> Início</button>
-    <button data-nav="game"><span>🎮</span> Modos de jogo</button>
+    <button class="active" data-nav="home"><span>⌂</span> Início</button>
+    <button data-nav="modes"><span>🎮</span> Modos de jogo</button>
     <button data-nav="shop"><span>▣</span> Loja de recompensas</button>
     <button data-nav="ranking"><span>♛</span> Ranking</button>
     <button data-nav="profile"><span>◉</span> Meu perfil</button>
@@ -202,25 +204,28 @@ body{background:#030a16!important;background-image:radial-gradient(ellipse at 70
 <div class="streak">🔥 Sequência: <b id="streak">0 dias</b> · Melhor: <b id="best">0</b></div>
 </section>
 
-<div class="section-heading"><div><small>ESCOLHA SUA EXPERIÊNCIA</small><h2>Modos de jogo</h2></div><span>3 MODOS DISPONÍVEIS</span></div><div class="modes">
-<button class="mode active" data-mode="hunt"><strong>🎁 Caça ao Achadinho</strong><small>Encontre a caixa premiada</small></button>
-<button class="mode" data-mode="price"><strong>💰 Adivinhe o Preço</strong><small>Qual é o preço real?</small></button>
-<button class="mode" data-mode="duel"><strong>⚔️ Duelo</strong><small>Escolha seu favorito</small></button>
-
-</div><section class="discovery-grid"><article class="discovery-card offers-card"><div class="discovery-icon">🛍️</div><div><span class="discovery-eyebrow">VITRINE DE OFERTAS</span><h3>Achadinhos em destaque</h3><p>Descubra produtos da Shopee e do Mercado Livre enquanto joga.</p></div><div class="market-tags"><span>🟠 SHOPEE</span><span>🟡 MERCADO LIVRE</span></div></article><article class="discovery-card missions-card"><div class="discovery-icon">🎯</div><div><span class="discovery-eyebrow">DESAFIOS DIÁRIOS</span><h3>Missões e recompensas</h3><p>Jogue rodadas, acerte desafios e aumente seu saldo de moedas.</p></div><button class="mission-cta" onclick="setMode('hunt')">COMEÇAR MISSÃO <span>→</span></button></article></section>
+<section class="discovery-grid"><article class="discovery-card offers-card"><div class="discovery-icon">🛍️</div><div><span class="discovery-eyebrow">VITRINE DE OFERTAS</span><h3>Achadinhos em destaque</h3><p>Descubra produtos da Shopee e do Mercado Livre enquanto joga.</p></div><div class="market-tags"><span>🟠 SHOPEE</span><span>🟡 MERCADO LIVRE</span></div></article><article class="discovery-card missions-card"><div class="discovery-icon">🎯</div><div><span class="discovery-eyebrow">DESAFIOS DIÁRIOS</span><h3>Missões e recompensas</h3><p>Jogue rodadas, acerte desafios e aumente seu saldo de moedas.</p></div><button class="mission-cta" onclick="setMode('hunt')">COMEÇAR MISSÃO <span>→</span></button></article></section>
 <section class="featured-section"><div class="section-heading"><div><small>SELEÇÃO DO DIA</small><h2>Ofertas em destaque <span class="live-dot"></span></h2></div><span>DEMO VISUAL</span></div><div class="featured-products">
 <article class="featured-product"><div class="featured-top"><span class="platform shopee">🟠 SHOPEE</span><span class="discount">-42%</span></div><div class="featured-art art-orange">🎧</div><div class="featured-info"><span class="featured-category">ELETRÔNICOS</span><h3>Fone Bluetooth sem fio</h3><div class="featured-prices"><b>R$ 49,90</b><del>R$ 86,90</del></div><div class="featured-footer"><span>⭐ 4,8 <small>· oferta exemplo</small></span><button onclick="demoOffer('Fone Bluetooth sem fio')">VER OFERTA ↗</button></div></div></article>
 <article class="featured-product"><div class="featured-top"><span class="platform mercado">🟡 MERCADO LIVRE</span><span class="discount">-35%</span></div><div class="featured-art art-blue">⌚</div><div class="featured-info"><span class="featured-category">ACESSÓRIOS</span><h3>Relógio inteligente</h3><div class="featured-prices"><b>R$ 89,90</b><del>R$ 139,90</del></div><div class="featured-footer"><span>⭐ 4,7 <small>· oferta exemplo</small></span><button onclick="demoOffer('Relógio inteligente')">VER OFERTA ↗</button></div></div></article>
 <article class="featured-product"><div class="featured-top"><span class="platform shopee">🟠 SHOPEE</span><span class="discount">-28%</span></div><div class="featured-art art-purple">🏠</div><div class="featured-info"><span class="featured-category">CASA & UTILIDADES</span><h3>Organizador multiuso</h3><div class="featured-prices"><b>R$ 35,90</b><del>R$ 49,90</del></div><div class="featured-footer"><span>⭐ 4,9 <small>· oferta exemplo</small></span><button onclick="demoOffer('Organizador multiuso')">VER OFERTA ↗</button></div></div></article></div><p class="demo-disclaimer">* Produtos, preços, descontos e avaliações são ilustrativos nesta versão de demonstração.</p></section>
 <section class="daily-missions"><div class="mission-heading"><div><span class="discovery-eyebrow">SUBA DE NÍVEL</span><h2>Missões diárias</h2><p>Complete desafios e ganhe recompensas extras.</p></div><div class="mission-trophy">🏆</div></div><div class="mission-list"><div class="mission-row"><div class="mission-symbol">🎮</div><div class="mission-copy"><b>Jogue sua primeira partida</b><small>Entre em qualquer modo de jogo</small><div class="mission-progress"><i style="width:0%"></i></div></div><strong>+50 ⭐</strong></div><div class="mission-row"><div class="mission-symbol purple-symbol">🎯</div><div class="mission-copy"><b>Acerte 3 desafios</b><small>Treine suas habilidades de caçador</small><div class="mission-progress"><i style="width:0%"></i></div></div><strong>+100 ⭐</strong></div><div class="mission-row"><div class="mission-symbol green-symbol">🪙</div><div class="mission-copy"><b>Acumule 100 moedas</b><small>Ganhe moedas jogando rodadas</small><div class="mission-progress"><i style="width:0%"></i></div></div><strong>+1 baú</strong></div></div></section></section>
 
+<section id="modesPanel" class="panel">
+<div class="section-heading modes-page-heading"><div><small>ESCOLHA SUA EXPERIÊNCIA</small><h2>Modos de jogo</h2></div><span>3 MODOS DISPONÍVEIS</span></div>
+<div class="modes">
+<button class="mode active" data-mode="hunt"><strong>🎁 Caça ao Achadinho</strong><small>Encontre a caixa premiada</small></button>
+<button class="mode" data-mode="price"><strong>💰 Adivinhe o Preço</strong><small>Qual é o preço real?</small></button>
+<button class="mode" data-mode="duel"><strong>⚔️ Duelo</strong><small>Escolha seu favorito</small></button>
+</div>
 <section id="gamePanel" class="game panel active"></section>
+</section>
 <section id="shopPanel" class="panel"><div class="game"><div class="gamehead"><b>🛒 Loja</b><span class="tag">🪙 <span id="shopCoins">0</span></span></div><p class="shop-note">Troque suas moedas por itens que ajudam nas partidas.</p><div id="shopItems" class="shop-grid"></div><div class="profile-section"><b>🎒 Seus itens</b><div id="shopInventory" class="inventory"></div></div></div></section>
 <section id="rankingPanel" class="panel"><div class="game"><div class="gamehead"><b>🏆 Ranking</b><span class="tag">TOP 20</span></div><div id="ranking" class="ranking"></div></div></section>
 <section id="profilePanel" class="panel"><div class="game profile-card"><div class="profile-hero"><div class="avatar" id="profileAvatar">🦊</div><div><h2 id="profileName">Caçador</h2><small>Caçador de Achadinhos</small></div></div><div class="level"><div><b id="profileLevel">NÍVEL 1</b><span id="profileLevelText"> 0 / 500 XP</span></div><div class="profile-progress"><i id="profileProgress"></i></div></div><div class="profile-grid"><div><b id="profileGames">0</b><small>Partidas</small></div><div><b id="profileHits">0</b><small>Acertos</small></div><div><b id="profileBest">0</b><small>Melhor sequência</small></div><div><b id="profileOffers">0</b><small>Ofertas vistas</small></div></div><div class="profile-section"><b>🏅 Conquistas</b><div class="achievements"><div id="ach1" class="achievement">🎯<small>Primeiro acerto</small></div><div id="ach3" class="achievement">🔥<small>Sequência 3</small></div><div id="ach7" class="achievement">⚡<small>Sequência 7</small></div><div id="ach50" class="achievement">🏆<small>50 partidas</small></div></div></div><div class="profile-section"><b>🎒 Inventário</b><div class="inventory"><div>🪙 <span id="invCoins">0</span> moedas</div><div>⭐ <span id="invPoints">0</span> pontos</div></div></div></div></section>
 </div>
 
-<nav class="bottom"><div class="nav"><button class="active" data-nav="game">🎮<br>Jogar</button><button data-nav="ranking">🏆<br>Ranking</button><button data-nav="shop">🛒<br>Loja</button><button data-nav="profile">👤<br>Perfil</button></div></nav>
+<nav class="bottom"><div class="nav"><button class="active" data-nav="home">⌂<br>Início</button><button data-nav="modes">🎮<br>Modos</button><button data-nav="ranking">🏆<br>Ranking</button><button data-nav="shop">🛒<br>Loja</button><button data-nav="profile">👤<br>Perfil</button></div></nav>
 
 <script>
 const tg=window.Telegram?.WebApp||null;
@@ -322,11 +327,17 @@ async function ranking(){
 function setMode(mode){
  currentMode=mode;
  document.querySelectorAll('.panel').forEach(x=>x.classList.remove('active'));
- $('gameHome').style.display=(mode==='hunt'||mode==='price'||mode==='duel')?'block':'none';
+ $('gameHome').style.display=mode==='home'?'block':'none';
  document.querySelectorAll('.mode').forEach(b=>b.classList.toggle('active',b.dataset.mode===mode));
- if(mode==='hunt'){ $('gamePanel').classList.add('active'); hunt() }
- if(mode==='price'){ $('gamePanel').classList.add('active'); price() }
- if(mode==='duel'){ $('gamePanel').classList.add('active'); duel() }
+ if(mode==='home'){ return }
+ if(mode==='hunt'||mode==='price'||mode==='duel'){
+   $('modesPanel').classList.add('active');
+   $('gamePanel').classList.add('active');
+   if(mode==='hunt') hunt();
+   if(mode==='price') price();
+   if(mode==='duel') duel();
+   return;
+ }
  if(mode==='ranking'){ $('rankingPanel').classList.add('active'); ranking() }
  if(mode==='shop'){ $('shopPanel').classList.add('active'); shop() }
 }
@@ -334,13 +345,19 @@ function setMode(mode){
 document.querySelectorAll('.mode').forEach(b=>b.addEventListener('click',()=>setMode(b.dataset.mode)));
 document.querySelectorAll('[data-nav]').forEach(b=>b.addEventListener('click',()=>{
  document.querySelectorAll('[data-nav]').forEach(x=>x.classList.toggle('active',x.dataset.nav===b.dataset.nav));
- document.querySelectorAll('.panel').forEach(x=>x.classList.remove('active'));
- if(b.dataset.nav==='ranking'){setMode('ranking')}
+ if(b.dataset.nav==='home'){setMode('home')}
+ else if(b.dataset.nav==='modes'){setMode(currentMode==='hunt'||currentMode==='price'||currentMode==='duel'?currentMode:'hunt')}
+ else if(b.dataset.nav==='ranking'){setMode('ranking')}
  else if(b.dataset.nav==='shop'){setMode('shop')}
- else if(b.dataset.nav==='profile'){$('profilePanel').classList.add('active');loadPlayer()}
- else {setMode(currentMode==='ranking'||currentMode==='shop'?'hunt':currentMode)}
+ else if(b.dataset.nav==='profile'){
+   document.querySelectorAll('.panel').forEach(x=>x.classList.remove('active'));
+   $('gameHome').style.display='none';
+   $('profilePanel').classList.add('active');
+   loadPlayer();
+ }
 }));
-loadPlayer();hunt();
+setMode('home');
+loadPlayer();
 </script>
 </body>
 </html>
