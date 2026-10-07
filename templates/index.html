@@ -360,8 +360,36 @@ const escapeHtml=s=>String(s??'').replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;'
 
 function demoOffer(name){alert('Demonstração visual: “'+name+'”. Este card e preço são fictícios. Na próxima etapa podemos conectar a oferta real da Shopee ou do Mercado Livre.')}
 
-async function get(url){const r=await fetch(api+url);if(!r.ok)throw Error('Falha ao carregar');return r.json()}
-async function post(url,data){const r=await fetch(api+url,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(data)});const j=await r.json();if(!r.ok)throw Error(j.erro||'Erro');return j}
+async function reauthTelegram(){
+  if(!tg || !tg.initData)return false;
+  try{
+    const r=await fetch(api+'/api/auth/telegram',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({initData:tg.initData})});
+    const d=await r.json();
+    if(!r.ok)throw Error(d.erro||'Não foi possível renovar a sessão');
+    sessionToken=d.token;playerId=d.user.id;playerName=d.user.nome;
+    localStorage.setItem('caca_session',sessionToken);localStorage.setItem('caca_user_id',playerId);localStorage.setItem('caca_user_name',playerName);
+    $('authOverlay').classList.add('hidden');
+    updatePlayer(d.player);
+    return true;
+  }catch(e){return false}
+}
+async function get(url,retry=true){
+  const r=await fetch(api+url);
+  if(r.status===401 && retry && sessionToken){
+    if(await reauthTelegram())return get(url,false);
+  }
+  if(!r.ok)throw Error('Falha ao carregar');
+  return r.json();
+}
+async function post(url,data,retry=true){
+  const r=await fetch(api+url,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(data)});
+  const j=await r.json();
+  if(r.status===401 && retry && sessionToken && url!='/api/auth/telegram'){
+    if(await reauthTelegram())return post(url,data,false);
+  }
+  if(!r.ok)throw Error(j.erro||'Erro');
+  return j
+}
 
 function updatePlayer(p){if(!p)return;$('points').textContent=p.pontos||0;$('coins').textContent=p.moedas||0;$('streak').textContent=(p.sequencia||0)+' acertos';$('best').textContent=p.melhor_sequencia||0;updateProfile(p);if(p.bonus_diario?.recebeu)alert('🎁 Bônus diário! +'+p.bonus_diario.moedas+' moedas e +'+p.bonus_diario.pontos+' pontos.');}
 function updateProfile(p){const games=p.partidas||p.jogos||0,hits=p.acertos||0,best=p.melhor_sequencia||0,offers=p.ofertas_vistas||0;const xp=games*10+hits*20;const level=Math.floor(xp/500)+1;const pct=Math.min(100,(xp%500)/5);$('profileName').textContent=playerName;$('profileLevel').textContent='NÍVEL '+level;$('profileLevelText').textContent=' '+(xp%500)+' / 500 XP';$('profileProgress').style.width=pct+'%';$('profileGames').textContent=games;$('profileHits').textContent=hits;$('profileBest').textContent=best;$('profileOffers').textContent=offers;$('invCoins').textContent=p.moedas||0;$('invPoints').textContent=p.pontos||0;$('ach1').classList.toggle('unlocked',hits>=1);$('ach3').classList.toggle('unlocked',best>=3);$('ach7').classList.toggle('unlocked',best>=7);$('ach50').classList.toggle('unlocked',games>=50)}
