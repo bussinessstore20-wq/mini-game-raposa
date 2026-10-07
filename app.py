@@ -45,6 +45,43 @@ SHOP_ITEMS = {
 
 jogadores = {}
 jogadores_lock = Lock()
+DB_PATH = os.environ.get("GAME_DB_PATH", os.path.join(os.path.dirname(__file__), "game.db"))
+SESSIONS = {}
+SESSIONS_LOCK = Lock()
+
+def db():
+    conn = sqlite3.connect(DB_PATH)
+    conn.row_factory = sqlite3.Row
+    return conn
+
+def init_db():
+    conn = db()
+    conn.execute("CREATE TABLE IF NOT EXISTS users (id TEXT PRIMARY KEY, nome TEXT NOT NULL, email TEXT UNIQUE NOT NULL, password_hash TEXT NOT NULL, created_at TEXT NOT NULL)")
+    conn.commit()
+    conn.close()
+
+def hash_password(password):
+    salt = secrets.token_bytes(16)
+    digest = hashlib.pbkdf2_hmac("sha256", password.encode(), salt, 120000)
+    return salt.hex() + ":" + digest.hex()
+
+def verify_password(password, stored):
+    try:
+        salt, digest = stored.split(":",1)
+        check = hashlib.pbkdf2_hmac("sha256", password.encode(), bytes.fromhex(salt), 120000)
+        return secrets.compare_digest(check.hex(), digest)
+    except Exception:
+        return False
+
+def save_player(jogador):
+    if str(jogador.get("id")) == "demo" or not jogador.get("email"):
+        return
+    conn=db()
+    conn.execute("UPDATE users SET nome=? WHERE id=?", (jogador["nome"],str(jogador["id"])))
+    conn.commit()
+    conn.close()
+
+init_db()
 
 def hoje():
     return datetime.now(timezone.utc).strftime("%Y-%m-%d")
@@ -54,7 +91,7 @@ def novo_jogador(user_id, nome="Caçador"):
         "id":str(user_id),"nome":nome or "Caçador","pontos":0,"moedas":0,
         "sequencia":0,"partidas":0,"acertos":0,"erros":0,"ofertas_vistas":0,
         "melhor_sequencia":0,"ultima_partida":None,"ultimo_login":None,
-        "bonus_diario_data":None,"bonus_diario_recebido":False,
+        "bonus_diario_data":None,"bonus_diario_recebido":False,"email":"","_password_hash":"",
         "ofertas_recompensadas":0,"inventario":{},"_rodadas":{}
     }
 
@@ -121,11 +158,46 @@ def health():
 
 @app.get("/api/player")
 def player():
-    jogador = obter_jogador(request.args.get("user_id","demo"), request.args.get("name","Caçador"))
-    bonus = aplicar_bonus_diario(jogador)
-    resposta = jogador_publico(jogador)
-    resposta["bonus_diario"] = bonus
+    token=request.args.get("token")
+    with SESSIONS_LOCK: uid=SESSIONS.get(token)
+    jogador=obter_jogador(uid) if uid else obter_jogador(request.args.get("user_id","demo"),request.args.get("name","Caçador"))
+    bonus=aplicar_bonus_diario(jogador)
+    resposta=jogador_publico(jogador); resposta["bonus_diario"]=bonus; resposta["email"]=jogador.get("email","")
     return jsonify(resposta)
+
+@app.post("/api/auth/register")
+def register():
+    dados=request.get_json(silent=True) or {}
+    nome=str(dados.get("nome","")).strip(); email=str(dados.get("email","")).strip().lower(); senha=str(dados.get("senha",""))
+    if len(nome)<2:return jsonify({"ok":False,"erro":"Digite seu nome."}),400
+    if "@" not in email or "." not in email:return jsonify({"ok":False,"erro":"Digite um e-mail válido."}),400
+    if len(senha)<6:return jsonify({"ok":False,"erro":"A senha precisa ter pelo menos 6 caracteres."}),400
+    conn=db()
+    if conn.execute("SELECT 1 FROM users WHERE email=?",(email,)).fetchone():
+        conn.close(); return jsonify({"ok":False,"erro":"Este e-mail já está cadastrado."}),409
+    uid="u_"+uuid.uuid4().hex; ph=hash_password(senha)
+    conn.execute("INSERT INTO users VALUES(?,?,?,?,?)",(uid,nome,email,ph,datetime.now(timezone.utc).isoformat())); conn.commit(); conn.close()
+    jogador=novo_jogador(uid,nome); jogador["email"]=email; jogador["_password_hash"]=ph; jogadores[uid]=jogador
+    token=secrets.token_urlsafe(32)
+    with SESSIONS_LOCK: SESSIONS[token]=uid
+    return jsonify({"ok":True,"token":token,"user":{"id":uid,"nome":nome,"email":email},"player":jogador_publico(jogador)})
+
+@app.post("/api/auth/login")
+def login():
+    dados=request.get_json(silent=True) or {}; email=str(dados.get("email","")).strip().lower(); senha=str(dados.get("senha",""))
+    conn=db(); row=conn.execute("SELECT * FROM users WHERE email=?",(email,)).fetchone(); conn.close()
+    if not row or not verify_password(senha,row["password_hash"]): return jsonify({"ok":False,"erro":"E-mail ou senha incorretos."}),401
+    jogador=jogadores.get(row["id"]) or novo_jogador(row["id"],row["nome"])
+    jogador["nome"]=row["nome"]; jogador["email"]=row["email"]; jogador["_password_hash"]=row["password_hash"]; jogadores[row["id"]]=jogador
+    token=secrets.token_urlsafe(32)
+    with SESSIONS_LOCK: SESSIONS[token]=row["id"]
+    return jsonify({"ok":True,"token":token,"user":{"id":row["id"],"nome":row["nome"],"email":row["email"]},"player":jogador_publico(jogador)})
+
+@app.post("/api/auth/logout")
+def logout():
+    dados=request.get_json(silent=True) or {}
+    with SESSIONS_LOCK: SESSIONS.pop(dados.get("token"),None)
+    return jsonify({"ok":True})
 
 @app.get("/api/game/hunt")
 def hunt():
@@ -148,6 +220,7 @@ def hunt_answer():
     else:
         registrar_erro(jogador); bonus = {"pontos":0,"moedas":0,"tipo":None}
     jogador["ultima_partida"] = int(time.time())
+    save_player(jogador)
     alvo = next((p for p in PRODUTOS if p["id"] == rodada["alvo"]), None)
     base = RECOMPENSAS["hunt"]
     return jsonify({"ok":True,"acertou":acertou,"pontos_ganhos":base["pontos"]+bonus["pontos"] if acertou else 0,"moedas_ganhas":base["moedas"]+bonus["moedas"] if acertou else 0,"bonus_sequencia":bonus,"achadinho":produto_publico(alvo),"player":jogador_publico(jogador)})
@@ -178,6 +251,7 @@ def price_answer():
     if acertou: bonus = registrar_acerto(jogador, "price")
     else: registrar_erro(jogador); bonus = {"pontos":0,"moedas":0,"tipo":None}
     jogador["ultima_partida"] = int(time.time())
+    save_player(jogador)
     base = RECOMPENSAS["price"]
     return jsonify({"ok":True,"acertou":acertou,"pontos_ganhos":base["pontos"]+bonus["pontos"] if acertou else 0,"moedas_ganhas":base["moedas"]+bonus["moedas"] if acertou else 0,"bonus_sequencia":bonus,"preco_real":produto["preco"],"produto":produto_publico(produto),"player":jogador_publico(jogador)})
 
@@ -200,6 +274,7 @@ def duel_answer():
     bonus = registrar_acerto(jogador, "duel")
     jogador["ofertas_vistas"] += 1
     jogador["ultima_partida"] = int(time.time())
+    save_player(jogador)
     base = RECOMPENSAS["duel"]
     produto = next((p for p in PRODUTOS if p["id"] == escolhido),None)
     return jsonify({"ok":True,"pontos_ganhos":base["pontos"]+bonus["pontos"],"moedas_ganhas":base["moedas"]+bonus["moedas"],"bonus_sequencia":bonus,"produto":produto_publico(produto) if produto else None,"player":jogador_publico(jogador)})
@@ -256,9 +331,10 @@ def shop_buy():
 
 @app.get("/api/ranking")
 def ranking():
-    with jogadores_lock:
-        lista = sorted(jogadores.values(), key=lambda p:(p["pontos"],p["acertos"]), reverse=True)
-        return jsonify([{"posicao":i+1,"nome":p["nome"],"pontos":p["pontos"],"moedas":p["moedas"],"sequencia":p["sequencia"]} for i,p in enumerate(lista[:20])])
-
-if __name__ == "__main__":
-    app.run(host="0.0.0.0", port=PORT)
+    with jogadores_lock: lista=sorted(jogadores.values(),key=lambda p:(p["pontos"],p["acertos"]),reverse=True)
+    atual=request.args.get("user_id")
+    rows=[{"posicao":i+1,"nome":p["nome"],"pontos":p["pontos"],"moedas":p["moedas"],"sequencia":p["sequencia"],"id":p["id"]} for i,p in enumerate(lista)]
+    me=next((x for x in rows if str(x["id"])==str(atual)),None)
+    top=rows[:20]
+    if me and not any(x["id"]==me["id"] for x in top): top.append(me)
+    return jsonify({"top":top,"total_jogadores":len(rows),"me":me})
