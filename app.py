@@ -2,6 +2,11 @@ import os
 import random
 import time
 import uuid
+import sqlite3
+import hashlib
+import secrets
+import json
+import hmac
 from datetime import datetime, timezone
 from threading import Lock
 
@@ -55,10 +60,41 @@ def db():
     return conn
 
 def init_db():
-    conn = db()
-    conn.execute("CREATE TABLE IF NOT EXISTS users (id TEXT PRIMARY KEY, nome TEXT NOT NULL, email TEXT UNIQUE NOT NULL, password_hash TEXT NOT NULL, created_at TEXT NOT NULL, stats_json TEXT NOT NULL DEFAULT '{}')")
-    try: conn.execute("ALTER TABLE users ADD COLUMN stats_json TEXT NOT NULL DEFAULT '{}'")
-    except sqlite3.OperationalError: pass
+    conn=db()
+    conn.execute("""CREATE TABLE IF NOT EXISTS telegram_users (
+        id TEXT PRIMARY KEY,
+        telegram_id TEXT UNIQUE NOT NULL,
+        nome TEXT NOT NULL,
+        username TEXT,
+        stats_json TEXT NOT NULL DEFAULT '{}',
+        created_at TEXT NOT NULL
+    )""")
+    conn.commit()
+    conn.close()
+
+def telegram_auth(init_data):
+    bot_token=os.environ.get("TELEGRAM_BOT_TOKEN") or os.environ.get("BOT_TOKEN")
+    if not bot_token or not init_data:
+        return None
+    try:
+        from urllib.parse import parse_qsl
+        pairs=dict(parse_qsl(init_data,keep_blank_values=True))
+        received=pairs.pop("hash",None)
+        if not received: return None
+        check="\n".join(f"{k}={pairs[k]}" for k in sorted(pairs))
+        secret=hashlib.sha256(bot_token.encode()).digest()
+        calc=hmac.new(secret,check.encode(),hashlib.sha256).hexdigest()
+        if not secrets.compare_digest(calc,received): return None
+        if int(time.time())-int(pairs.get("auth_date","0"))>86400: return None
+        return json.loads(pairs["user"])
+    except Exception:
+        return None
+
+def save_player(jogador):
+    if str(jogador.get("id")) == "demo": return
+    stats={k:v for k,v in jogador.items() if not k.startswith("_") and k not in ("id","nome","email")}
+    conn=db()
+    conn.execute("UPDATE telegram_users SET nome=?, stats_json=? WHERE id=?",(jogador["nome"],json.dumps(stats),str(jogador["id"])))
     conn.commit()
     conn.close()
 
@@ -158,47 +194,53 @@ def health():
 def player():
     token=request.args.get("token")
     with SESSIONS_LOCK: uid=SESSIONS.get(token)
-    jogador=obter_jogador(uid) if uid else obter_jogador(request.args.get("user_id","demo"),request.args.get("name","Caçador"))
+    jogador=obter_jogador(uid) if uid else obter_jogador("demo","Caçador")
     bonus=aplicar_bonus_diario(jogador)
     resposta=jogador_publico(jogador); resposta["bonus_diario"]=bonus; resposta["email"]=jogador.get("email","")
     return jsonify(resposta)
 
-@app.post("/api/auth/register")
-def register():
+@app.post("/api/auth/telegram")
+def auth_telegram():
     dados=request.get_json(silent=True) or {}
-    nome=str(dados.get("nome","")).strip(); email=str(dados.get("email","")).strip().lower(); senha=str(dados.get("senha",""))
-    if len(nome)<2:return jsonify({"ok":False,"erro":"Digite seu nome."}),400
-    if "@" not in email or "." not in email:return jsonify({"ok":False,"erro":"Digite um e-mail válido."}),400
-    if len(senha)<6:return jsonify({"ok":False,"erro":"A senha precisa ter pelo menos 6 caracteres."}),400
+    user=telegram_auth(str(dados.get("initData","")))
+    if not user:
+        return jsonify({"ok":False,"erro":"Não foi possível validar sua sessão do Telegram. Abra o jogo pelo Telegram."}),401
+    uid="tg_"+str(user["id"])
     conn=db()
-    if conn.execute("SELECT 1 FROM users WHERE email=?",(email,)).fetchone():
-        conn.close(); return jsonify({"ok":False,"erro":"Este e-mail já está cadastrado."}),409
-    uid="u_"+uuid.uuid4().hex; ph=hash_password(senha)
-    conn.execute("INSERT INTO users VALUES(?,?,?,?,?)",(uid,nome,email,ph,datetime.now(timezone.utc).isoformat())); conn.commit(); conn.close()
-    jogador=novo_jogador(uid,nome); jogador["email"]=email; jogador["_password_hash"]=ph; jogadores[uid]=jogador
+    row=conn.execute("SELECT * FROM telegram_users WHERE telegram_id=?",(str(user["id"]),)).fetchone()
+    if not row:
+        conn.execute("INSERT INTO telegram_users(id,telegram_id,nome,username,stats_json,created_at) VALUES(?,?,?,?,?,?)",
+                     (uid,str(user["id"]),user.get("first_name","Caçador"),user.get("username"),"{}",datetime.now(timezone.utc).isoformat()))
+        conn.commit()
+        stats={}
+    else:
+        uid=row["id"]; stats=json.loads(row["stats_json"] or "{}")
+        conn.execute("UPDATE telegram_users SET nome=?,username=? WHERE id=?",
+                     (user.get("first_name","Caçador"),user.get("username"),uid))
+        conn.commit()
+    conn.close()
+    jogador=novo_jogador(uid,user.get("first_name","Caçador"))
+    jogador.update(stats)
+    jogador["telegram_id"]=str(user["id"])
+    jogador["username"]=user.get("username") or ""
+    jogadores[uid]=jogador
     token=secrets.token_urlsafe(32)
     with SESSIONS_LOCK: SESSIONS[token]=uid
-    return jsonify({"ok":True,"token":token,"user":{"id":uid,"nome":nome,"email":email},"player":jogador_publico(jogador)})
-
-@app.post("/api/auth/login")
-def login():
-    dados=request.get_json(silent=True) or {}; email=str(dados.get("email","")).strip().lower(); senha=str(dados.get("senha",""))
-    conn=db(); row=conn.execute("SELECT * FROM users WHERE email=?",(email,)).fetchone(); conn.close()
-    if not row or not verify_password(senha,row["password_hash"]): return jsonify({"ok":False,"erro":"E-mail ou senha incorretos."}),401
-    jogador=jogadores.get(row["id"]) or novo_jogador(row["id"],row["nome"])
-    try:
-        jogador.update(json.loads(row["stats_json"] or "{}"))
-    except Exception: pass
-    jogador["nome"]=row["nome"]; jogador["email"]=row["email"]; jogador["_password_hash"]=row["password_hash"]; jogadores[row["id"]]=jogador
-    token=secrets.token_urlsafe(32)
-    with SESSIONS_LOCK: SESSIONS[token]=row["id"]
-    return jsonify({"ok":True,"token":token,"user":{"id":row["id"],"nome":row["nome"],"email":row["email"]},"player":jogador_publico(jogador)})
+    return jsonify({"ok":True,"token":token,"user":{"id":uid,"nome":jogador["nome"],"username":jogador["username"]},"player":jogador_publico(jogador)})
 
 @app.post("/api/auth/logout")
 def logout():
     dados=request.get_json(silent=True) or {}
     with SESSIONS_LOCK: SESSIONS.pop(dados.get("token"),None)
     return jsonify({"ok":True})
+
+def jogador_da_requisicao(dados=None):
+    dados=dados or {}
+    token=dados.get("token") or request.args.get("token")
+    with SESSIONS_LOCK: uid=SESSIONS.get(token)
+    if uid:
+        return obter_jogador(uid)
+    return obter_jogador("demo","Caçador")
 
 @app.get("/api/game/hunt")
 def hunt():
