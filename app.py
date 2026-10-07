@@ -237,6 +237,8 @@ def produto_publico(produto):
 
 def escolher_produtos(quantidade=3):
     produtos=carregar_produtos_reais()
+    if not produtos:
+        return []
     return random.sample(produtos, min(quantidade,len(produtos)))
 
 def aplicar_bonus_diario(jogador):
@@ -286,7 +288,12 @@ def health():
 @app.get("/api/offers")
 def offers():
     produtos=carregar_produtos_reais()
-    return jsonify({"produtos":[produto_publico(p) for p in produtos[:12]],"total":len(produtos)})
+    itens=[]
+    for p in produtos[:12]:
+        item=produto_publico(p)
+        item["url"]=p.get("url") or "#"
+        itens.append(item)
+    return jsonify({"produtos":itens,"total":len(produtos)})
 
 @app.get("/api/player")
 def player():
@@ -352,6 +359,8 @@ def hunt():
     jogador, erro = require_player()
     if erro: return erro
     produtos = escolher_produtos(3)
+    if not produtos:
+        return jsonify({"ok":False,"erro":"Nenhum produto real disponível no momento. Tente novamente em instantes."}),503
     alvo = random.choice(produtos)
     rodada_id = str(uuid.uuid4())
     jogador["_rodadas"][rodada_id] = {"tipo":"hunt","alvo":alvo["id"],"criada":time.time()}
@@ -413,6 +422,8 @@ def price_answer():
 @app.get("/api/game/duel")
 def duel():
     produtos = escolher_produtos(2)
+    if len(produtos) < 2:
+        return jsonify({"ok":False,"erro":"Ainda não há produtos reais suficientes para o Duelo. Tente novamente em instantes."}),503
     rodada_id = str(uuid.uuid4())
     jogador, erro = require_player()
     if erro: return erro
